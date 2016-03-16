@@ -1,5 +1,5 @@
 # SMUGRUBBER
-![Alpha Build Screencapture](https://github.com/frigginglorious/smugrubber/img/screencap.gif)
+![Alpha Build Screencapture](https://github.com/frigginglorious/smugrubber/raw/master/img/screencap.gif)
 #### The Game of Unrelenting Smuggery
 Running Instructions
 - download github
