@@ -1,7 +1,7 @@
 var m_particles = [
     {
         color: {
-            r: 50,
+            r: 60,
             g: 50,
             b: 50
         },

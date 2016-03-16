@@ -1685,7 +1685,7 @@ var game = {
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
         gl.disable(gl.BLEND);
-        gl.enable(gl.DEPTH_TEST);
+        // gl.enable(gl.DEPTH_TEST);
 
         gl.useProgram(game.color_shader_program);
         game.render_asteroids();
@@ -1700,7 +1700,7 @@ var game = {
         }
 
         gl.disable(gl.BLEND);
-        gl.enable(gl.DEPTH_TEST);
+        // gl.enable(gl.DEPTH_TEST);
 
         gl.useProgram(game.color_shader_program);
         for(var i in game.crates) {
