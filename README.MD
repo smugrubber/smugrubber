@@ -8,7 +8,7 @@ Running Instructions
 - then go into the directory ie ~/Docsandsettsings/smugrubber
 - and in console do:
   -  ``` python -m SimpleHTTPServer 8000 ``` 
-- then open [127.0.0.1:8000] in ur browser
+- then open http://127.0.0.1:8000 in your browser
 
 once we get website up itll be easier but for now thats best way
 
