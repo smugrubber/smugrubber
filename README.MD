@@ -1,6 +1,6 @@
 # SMUGRUBBER
-#### The unrelenting smuggering
-----
+![Alpha Build Screencapture](https://github.com/frigginglorious/smugrubber/img/screencap.gif)
+#### The Game of Unrelenting Smuggery
 Running Instructions
 - download github
 - then download the repo
