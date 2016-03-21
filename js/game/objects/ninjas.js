@@ -1,6 +1,6 @@
 var m_ninjas = [
     {
-        max_damage: 20,
+        max_damage: 5,
         stock: 2,
         move: {
             strength: 500,

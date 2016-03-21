@@ -1762,13 +1762,13 @@ var game = {
 
                     hud.fillText(gun_text, 200, hud_height * 0.8);
 
-                    hud.fillText("jetpack: " + Math.floor(Math.max(0, game.ninja.n.jetpack.ammo)), 700, hud_height * 0.8);//m_ninjas[this.ninja_type].jetpack.max_ammo, 700, hud_height * 0.8);
+                    hud.fillText("jetpack: " + Math.floor(Math.max(0, game.ninja.n.jetpack.ammo)), 600, hud_height * 0.8);//m_ninjas[this.ninja_type].jetpack.max_ammo, 700, hud_height * 0.8);
 
                     if(settings.victoryCondition.stock){
-                        hud.fillText("Stock: " + game.ninja.n.stock, 550, hud_height * 0.8);
+                        hud.fillText("Stock: " + game.ninja.n.stock, 420, hud_height * 0.8);
                     }
 
-                    hud.fillText("vx: " + Math.ceil(game.ninja.n.body.GetLinearVelocity().get_x()) + " vy: " + Math.ceil(game.ninja.n.body.GetLinearVelocity().get_y()), 1200, hud_height * 0.8);
+                    hud.fillText("vx: " + Math.ceil(game.ninja.n.body.GetLinearVelocity().get_x()) + " vy: " + Math.ceil(game.ninja.n.body.GetLinearVelocity().get_y()), 850, hud_height * 0.8);
                 } else {
                     hud.fillText("respawning in: " + game.ninja.n.respawn_counter, 10, hud_height * 0.8);
                 }

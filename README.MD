@@ -16,3 +16,11 @@ For Windows
 ===========
 * https://desktop.github.com/
 * https://www.python.org/downloads/windows/
+
+SFX
+===========
+Sounds (c) by Michel Baradari apollo-music.de
+
+Licensed under CC BY 3.0 http://creativecommons.org/licenses/by/3.0/
+
+Hosted on opengameart.org
