@@ -12,12 +12,10 @@ Array.prototype.remove = function(from, to) {
 var gameCvs    = document.getElementById("gameCvs");
 gameCvs.width  = document.documentElement.clientWidth;
 gameCvs.height = document.documentElement.clientHeight;
-var hudCvs     = document.getElementById("hudCvs");
-hudCvs.width   = document.documentElement.clientWidth;
-hudCvs.height  = (document.documentElement.clientHeight) / 12;
+
 
 var gl = initGL();
-var hud = initHud();
+
 
 window.onresize = function() {
     gameCvs.width  = document.documentElement.clientWidth;
@@ -58,15 +56,7 @@ function initGL()
 
     return gl;
 }
-function initHud(){
-    var hud;
-    try{
-        hud = hudCvs.getContext("2d");
-    } catch(e){
-        console.log(e);
-    }
-    return hud;
-}
+
 
 
 var game = {
@@ -1727,52 +1717,63 @@ var game = {
         for(var i in game.particles) {
             game.particles[i].render();
         }
-        hud.fillStyle = "white";
-        hud.fillText("GUNZ", 20, 20);
-
-
-        /*
-
-
-        ctx.restore();
 
         if(game.ninja != null) {
+            var hudCvs     = document.getElementById("hudCvs");
             var hud_height = 50;
-            ctx.save();
-                ctx.translate(0, gameCvs.height - hud_height);
-                ctx.font      = Math.floor(hud_height * 0.5) + "px Andale Mono";
-                ctx.fillStyle = 'rgb(255, 255, 255)';
+            hudCvs.width   = document.documentElement.clientWidth;
+            hudCvs.height  = hud_height; // (document.documentElement.clientHeight) / 12;
+            var hud = initHud();
+            function initHud(){
+                var hud;
+                try{
+                    hud = hudCvs.getContext("2d");
+                } catch(e){
+                    console.log(e);
+                }
+                return hud;
+            }
+            
+            hud.fillStyle = "white";
+            
+            hud.font      = Math.floor(hud_height * 0.5) + "px Andale Mono";
+            // hud.fillText(Math.floor(game.ninja.n.damage * 100) + "%", 10, hud_height * 0.9);
+            // hud.fillText("GUNZ", 20, 20);
 
+
+            
+            hud.save();
+                
                 if(game.ninja.n.alive) {
-                    ctx.fillText(Math.floor(game.ninja.n.damage * 100) + "%", 10, hud_height * 0.9);
+                    hud.fillText(Math.floor(game.ninja.n.damage * 100) + "%", 10, hud_height * 0.9);
 
                     var gun_text = "";
-                    ctx.drawImage(guns[game.ninja.n.gun.type].sprite, 100, hud_height * 0.4);
+                    hud.drawImage(m_guns[game.ninja.n.gun.type].sprite, 100, hud_height * 0.4);
 
                     if(game.ninja.n.gun.reloadtime > 0) {
                         gun_text += "reloading (" + game.ninja.n.gun.reloadtime + ")";
                     } else {
-                        gun_text += "" + game.ninja.n.gun.ammo + "/" + guns[game.ninja.n.gun.type].ammo;
+                        gun_text += "" + game.ninja.n.gun.ammo + "/" + m_guns[game.ninja.n.gun.type].ammo;
 
                         if(game.ninja.n.gun.fireinterval > 0) {
                             gun_text += " (" + game.ninja.n.gun.fireinterval + ")";
                         }
                     }
 
-                    ctx.fillText(gun_text, 200, hud_height * 0.8);
+                    hud.fillText(gun_text, 200, hud_height * 0.8);
 
-                    ctx.fillText("jetpack: " + Math.floor(Math.max(0, game.ninja.n.jetpack.ammo)) + "/" + m_ninjas[this.ninja_type].jetpack.max_ammo, 700, hud_height * 0.8);
+                    hud.fillText("jetpack: " + Math.floor(Math.max(0, game.ninja.n.jetpack.ammo)), 700, hud_height * 0.8);//m_ninjas[this.ninja_type].jetpack.max_ammo, 700, hud_height * 0.8);
 
                     if(settings.victoryCondition.stock){
-                        ctx.fillText("Stock: " + game.ninja.n.stock, 550, hud_height * 0.8);
+                        hud.fillText("Stock: " + game.ninja.n.stock, 550, hud_height * 0.8);
                     }
 
-                    ctx.fillText("vx: " + Math.ceil(game.ninja.n.body.GetLinearVelocity().get_x()) + " vy: " + Math.ceil(game.ninja.n.body.GetLinearVelocity().get_y()), 1200, hud_height * 0.8);
+                    hud.fillText("vx: " + Math.ceil(game.ninja.n.body.GetLinearVelocity().get_x()) + " vy: " + Math.ceil(game.ninja.n.body.GetLinearVelocity().get_y()), 1200, hud_height * 0.8);
                 } else {
-                    ctx.fillText("respawning in: " + game.ninja.n.respawn_counter, 10, hud_height * 0.8);
+                    hud.fillText("respawning in: " + game.ninja.n.respawn_counter, 10, hud_height * 0.8);
                 }
-            ctx.restore();
-        }*/
+            hud.restore();
+        }
 
 
         window.requestAnimationFrame(game.render);
@@ -1828,8 +1829,9 @@ var game = {
             game.ninjas[id].spawn(s.x, s.y);
             game.ninja = game.ninja_human_controller(game.ninjas[id]);
             game.camninja = game.ninjas[id];
+            themeSong.stop();
         }
-        themeSong.stop();
+        
         $('#overlay').fadeOut(100);
     }
 
