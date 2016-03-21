@@ -1136,7 +1136,7 @@ var game = {
 
                 //todo fix contact detect
                 //maybe just need to loop thru clist?
-                var strength = 15;
+                var strength = m_ninjas[this.ninja_type].move.jump;
                 if(this.touching_ground) {
                     this.body.ApplyLinearImpulse(new Box2D.b2Vec2(0.0, strength));
                     this.body.SetAngularVelocity(0.0);
