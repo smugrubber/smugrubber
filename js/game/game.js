@@ -349,7 +349,7 @@ var game = {
         this.world.SetContactListener(this.listener);
 
         this.sprites.ninja = new Image();
-        this.sprites.ninja.src = '/img/sprites/ninjas/ninja.png';
+        this.sprites.ninja.src = '/img/sprites/ninjas/KnightSprite.png';
 
 
         var bounds = { left: 0, right: 0, top: 0, bottom: 0 };
@@ -560,7 +560,7 @@ var game = {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.bindTexture(gl.TEXTURE_2D, null);
         };
-        m.texture.image.src = "/img/sprites/ninjas/ninja.png";
+        m.texture.image.src = "/img/sprites/ninjas/KnightSprite.png";
 
 
 
@@ -1727,7 +1727,7 @@ var game = {
         for(var i in game.particles) {
             game.particles[i].render();
         }
-        
+        hud.fillStyle = "white";
         hud.fillText("GUNZ", 20, 20);
 
 
