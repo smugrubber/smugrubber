@@ -20,9 +20,9 @@ var settings = {
     },
     colors: {
         background: {
-            r: 60,
-            g: 40,
-            b: 40
+            r: 20, // r: 60,
+            g: 20, // g: 40,
+            b: 20  // b: 40
         },
         asteroid: {
             r: 88,

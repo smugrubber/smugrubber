@@ -9,17 +9,21 @@ Array.prototype.remove = function(from, to) {
   return this.push.apply(this, rest);
 };
 
-var canvas    = document.getElementById("canvas");
-canvas.width  = document.documentElement.clientWidth;
-canvas.height = document.documentElement.clientHeight;
+var gameCvs    = document.getElementById("gameCvs");
+gameCvs.width  = document.documentElement.clientWidth;
+gameCvs.height = document.documentElement.clientHeight;
+var hudCvs     = document.getElementById("hudCvs");
+hudCvs.width   = document.documentElement.clientWidth;
+hudCvs.height  = (document.documentElement.clientHeight) / 12;
 
 var gl = initGL();
+var hud = initHud();
 
 window.onresize = function() {
-    canvas.width  = document.documentElement.clientWidth;
-    canvas.height = document.documentElement.clientHeight;
-    gl.viewportWidth = canvas.width;
-    gl.viewportHeight = canvas.height;
+    gameCvs.width  = document.documentElement.clientWidth;
+    gameCvs.height = document.documentElement.clientHeight;
+    gl.viewportWidth = gameCvs.width;
+    gl.viewportHeight = gameCvs.height;
 };
 
 var meter = new FPSMeter();
@@ -41,9 +45,9 @@ function initGL()
 {
     var gl;
     try {
-        gl = canvas.getContext("webgl");
-        gl.viewportWidth = canvas.width;
-        gl.viewportHeight = canvas.height;
+        gl = gameCvs.getContext("webgl");
+        gl.viewportWidth = gameCvs.width;
+        gl.viewportHeight = gameCvs.height;
     } catch (e) {
         console.log(e);
     }
@@ -53,6 +57,15 @@ function initGL()
     }
 
     return gl;
+}
+function initHud(){
+    var hud;
+    try{
+        hud = hudCvs.getContext("2d");
+    } catch(e){
+        console.log(e);
+    }
+    return hud;
 }
 
 
@@ -1223,7 +1236,7 @@ var game = {
             toss_counter: 0,
             update: function() {
                 this.n.facing_dir = (game.mousex < window.innerWidth / 2) ? 1 : -1;
-                this.angle = Math.atan2((canvas.height / 2) - game.mousey, game.mousex - canvas.width / 2);
+                this.angle = Math.atan2((gameCvs.height / 2) - game.mousey, game.mousex - gameCvs.width / 2);
                 this.n.gun_angle = this.angle;
 
                 if(game.mouseDown[0] ) {
@@ -1667,8 +1680,8 @@ var game = {
         mat4.identity(game.model_view_matrix);
 
         mat4.translate(game.model_view_matrix, [
-            (game.game_offset.x + (canvas.width  / 2) - game.mousex) * 0.04,
-            (game.game_offset.y + (canvas.height / 2) + game.mousey) * 0.04,
+            (game.game_offset.x + (gameCvs.width  / 2) - game.mousex) * 0.04,
+            (game.game_offset.y + (gameCvs.height / 2) + game.mousey) * 0.04,
             -50
         ]);
 
@@ -1676,7 +1689,7 @@ var game = {
             var pos = game.camninja.body.GetPosition();
             mat4.translate(game.model_view_matrix, [
                 -pos.get_x(),
-                -pos.get_y() - (canvas.height * 0.04),
+                -pos.get_y() - (gameCvs.height * 0.04),
                 0.0
             ]);
         }
@@ -1714,6 +1727,9 @@ var game = {
         for(var i in game.particles) {
             game.particles[i].render();
         }
+        
+        hud.fillText("GUNZ", 20, 20);
+
 
         /*
 
@@ -1723,7 +1739,7 @@ var game = {
         if(game.ninja != null) {
             var hud_height = 50;
             ctx.save();
-                ctx.translate(0, canvas.height - hud_height);
+                ctx.translate(0, gameCvs.height - hud_height);
                 ctx.font      = Math.floor(hud_height * 0.5) + "px Andale Mono";
                 ctx.fillStyle = 'rgb(255, 255, 255)';
 
@@ -1780,7 +1796,7 @@ var game = {
         var y = event.pageY;
         game.mousex = x;
         game.mousey = y;
-        game.mouseangle = Math.atan2((canvas.height / 2) - y, x - (canvas.width / 2));
+        game.mouseangle = Math.atan2((gameCvs.height / 2) - y, x - (gameCvs.width / 2));
     },
 
     keydown: function(e) {
@@ -1813,7 +1829,7 @@ var game = {
             game.ninja = game.ninja_human_controller(game.ninjas[id]);
             game.camninja = game.ninjas[id];
         }
-
+        themeSong.stop();
         $('#overlay').fadeOut(100);
     }
 
