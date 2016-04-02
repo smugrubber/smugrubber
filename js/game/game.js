@@ -92,6 +92,7 @@ var game = {
     KEY_DOWN : 4,
     KEY_LEFT : 8,
     KEY_TOSS : 16,
+    KEY_CHANGE: 32,
     keyResult: 0,
     in_main_menu: true,
     RESTART: false,
@@ -1255,6 +1256,9 @@ var game = {
                         this.n.jump();
                         this.n.move(1);
                         break;
+                    case game.KEY_CHANGE: //Using it as menu right now cuz i dont know escape key.
+                        game.toggleMenu();
+                        break;
                 }
                 
                 if(game.keyResult & game.KEY_TOSS) {
@@ -1833,6 +1837,10 @@ var game = {
         }
         
         $('#overlay').fadeOut(100);
+    },
+
+    toggleMenu: function() {
+        $('#overlay').fadeIn(100);
     }
 
 };

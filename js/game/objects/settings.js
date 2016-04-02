@@ -1,6 +1,6 @@
 var settings = {
     victoryCondition:{
-        stock: true, // Game restarts after lives from settings.ninja.stock are gone
+        stock: false, // Game restarts after lives from settings.ninja.stock are gone
         lastMan: false, // Each death adds respawn time, ends the second  only one player is left alive
     },
     boundary: {
@@ -16,13 +16,13 @@ var settings = {
         key_down:  83,
         key_right: 68,
         key_toss:  70,
-        change_weapon: 81 // q
+        key_change: 81 // q
     },
     colors: {
         background: {
-            r: 20, // r: 60,
-            g: 20, // g: 40,
-            b: 20  // b: 40
+            r: 200, // r: 60,
+            g: 200, // g: 40,
+            b: 200  // b: 40
         },
         asteroid: {
             r: 88,
