@@ -16,13 +16,13 @@ var settings = {
         key_down:  83,
         key_right: 68,
         key_toss:  70,
-        key_change: 81 // q
+        key_menu: 81 // q
     },
     colors: {
         background: {
-            r: 200, // r: 60,
-            g: 200, // g: 40,
-            b: 200  // b: 40
+            r: 20, // r: 60,
+            g: 20, // g: 40,
+            b: 20  // b: 40
         },
         asteroid: {
             r: 88,

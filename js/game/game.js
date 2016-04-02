@@ -92,7 +92,7 @@ var game = {
     KEY_DOWN : 4,
     KEY_LEFT : 8,
     KEY_TOSS : 16,
-    KEY_CHANGE: 32,
+    KEY_MENU: 32,
     keyResult: 0,
     in_main_menu: true,
     RESTART: false,
@@ -1144,6 +1144,15 @@ var game = {
                 }
             },
 
+            menuUp: function(bool = 0) {
+                if(bool){
+                   $("#overlay").show();
+               }else{
+                    $("#overlay").hide();
+               }
+                
+            },
+
             fire_jetpack: function() {
                 if(! this.alive) {
                     return;
@@ -1237,7 +1246,7 @@ var game = {
                 if(game.mouseDown[2]) {
                    this.n.fire_jetpack(); 
                 }
-
+                this.n.menuUp(0);
                 switch(game.keyResult) {
                     case game.KEY_UP:
                         this.n.jump();
@@ -1256,9 +1265,13 @@ var game = {
                         this.n.jump();
                         this.n.move(1);
                         break;
-                    case game.KEY_CHANGE: //Using it as menu right now cuz i dont know escape key.
-                        game.toggleMenu();
+                    case game.KEY_MENU: //Using it as menu right now cuz i dont know escape key.
+                        this.n.menuUp(1);
                         break;
+                    // case game.KEY_MENU: //Using it as menu right now cuz i dont know escape key.
+                    //     console.log("ended menu");
+                    //     game.toggleMenuDown();
+                    //     break;
                 }
                 
                 if(game.keyResult & game.KEY_TOSS) {
@@ -1812,6 +1825,7 @@ var game = {
             case settings.controls.key_down:  game.keyResult |= game.KEY_DOWN;  break;
             case settings.controls.key_right: game.keyResult |= game.KEY_RIGHT; break;
             case settings.controls.key_toss:  game.keyResult |= game.KEY_TOSS;  break;
+            case settings.controls.key_menu:  game.keyResult |= game.KEY_MENU;  break;
         }
     },
 
@@ -1823,6 +1837,7 @@ var game = {
             case settings.controls.key_down:  game.keyResult ^= game.KEY_DOWN;  break;
             case settings.controls.key_right: game.keyResult ^= game.KEY_RIGHT; break;
             case settings.controls.key_toss:  game.keyResult ^= game.KEY_TOSS;  break;
+            case settings.controls.key_menu:  game.keyResult ^= game.KEY_MENU;  break;
         }
     },
 
@@ -1837,11 +1852,14 @@ var game = {
         }
         
         $('#overlay').fadeOut(100);
-    },
-
-    toggleMenu: function() {
-        $('#overlay').fadeIn(100);
     }
+
+    // toggleMenuUp: function() {
+    //     $('#overlay').fadeIn(100);
+    // },
+    // toggleMenuDown: function() {
+    //     $('#overlay').fadeOut(100);
+    // }
 
 };
 
@@ -1888,4 +1906,18 @@ function Sound(source,volume,loop)
         this.volume=volume;
         this.loop=loop;
     }
+}
+function changeWeapon(gun_type = -1,id = 0){
+    if(gun_type < 0){
+        var gun_type = Math.floor(Math.random() * m_guns.length);
+    }
+    this.gun = {
+        type: gun_type,
+        ammo:         m_guns[gun_type].ammo,
+        fireinterval: m_guns[gun_type].fireinterval,
+        src: m_guns[gun_type].src,
+        reloadtime:   500
+    };
+    game.ninja.n.gun = this.gun;
+    // console.log("Changing to: " + m_guns[gun_type].name + " for id: " + id + " and ninja: " + game.ninja);
 }

@@ -58,3 +58,9 @@ html, body {
     bottom: 0px;
     z-index: 10;
 }
+
+#gun_list li a{
+    padding-left: auto;
+    padding-right: auto;
+    color: white;
+}

@@ -13,6 +13,11 @@
                 <h1>smugrubber</h1>
                 <h2>fertilize space with alien remains</h2>
             </div>
+            <div id="gun_menu">
+                <ul id="gun_list">
+                    <li><a href="#" class="changeWeapon">Random Weapon</a></li>
+                </ul>
+            </div>
         </div>
         <script id="texture-shader-fs" type="x-shader/x-fragment">
             precision mediump float;
@@ -77,5 +82,16 @@
         <script src="/js/game/objects/settings.js"></script>
 
         <script src="/js/game/game.js"></script>
+        <script>
+        $(".changeWeapon").click(function(){
+            changeWeapon();
+        });
+        for(var countGuns = 0; countGuns < m_guns.length; countGuns++){
+            $("#gun_list").append("<li><a href='#'>" + countGuns + "</a></li>");
+            // $("#overlay").append("<a href='")
+            // m_guns.
+        }
+        
+        </script>
     </body>
 </html>
