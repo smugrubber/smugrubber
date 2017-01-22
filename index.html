@@ -83,15 +83,13 @@
 
         <script src="/js/game/game.js"></script>
         <script>
-        $(".changeWeapon").click(function(){
-            changeWeapon();
-        });
+        // $(".changeWeapon").click(function(){
+        //     changeWeapon();
+        // });
         for(var countGuns = 0; countGuns < m_guns.length; countGuns++){
-            $("#gun_list").append("<li><a href='#'>" + countGuns + "</a></li>");
-            // $("#overlay").append("<a href='")
-            // m_guns.
+            $("#gun_list").append("<li><a onclick='changeWeapon(" + countGuns + ")' href='#'>" + m_guns[countGuns].name + "</a></li>");
 
-}
+        }
         </script>
     </body>
 </html>

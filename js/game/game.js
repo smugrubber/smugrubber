@@ -143,12 +143,12 @@ var game = {
             if(tA == 'asteroid') { bA = game.asteroids[udA].body; }
             if(tA == 'crate')    { bA = game.crates[udA].body; }
             if(tA == 'ninja')    { bA = game.ninjas[udA].body; }
-            
+
             if(tB == 'bullet')   { bB = game.bullets[udB].body; }
             if(tB == 'asteroid') { bB = game.asteroids[udB].body; }
             if(tB == 'crate')    { bB = game.crates[udB].body; }
             if(tB == 'ninja')    { bB = game.ninjas[udB].body; }
-            
+
 
             var pxA = bA.GetPosition().get_x();
             var pyA = bA.GetPosition().get_y();
@@ -210,12 +210,12 @@ var game = {
                 var bullet = game.bullets[bullet_ud];
                 bullet.alive = false;
             }
-            
+
             function bullet_crate(bullet_ud) {
                 var bullet = game.bullets[bullet_ud];
                 bullet.alive = false;
             }
-            
+
             function asteroid_ninja(ninja_ud) {
                 var ninja = game.ninjas[ninja_ud];
 
@@ -225,7 +225,7 @@ var game = {
 
                 ninja.touching_ground = true;
             }
-            
+
             function crate_ninja(crate_ud, ninja_ud, angle) {
                 var crate = game.crates[crate_ud];
                 var ninja = game.ninjas[ninja_ud];
@@ -310,12 +310,12 @@ var game = {
             if(tA == 'asteroid') { bA = game.asteroids[udA].body; }
             if(tA == 'crate')    { bA = game.crates[udA].body; }
             if(tA == 'ninja')    { bA = game.ninjas[udA].body; }
-            
+
             if(tB == 'bullet')   { bB = game.bullets[udB].body; }
             if(tB == 'asteroid') { bB = game.asteroids[udB].body; }
             if(tB == 'crate')    { bB = game.crates[udB].body; }
             if(tB == 'ninja')    { bB = game.ninjas[udB].body; }
-            
+
 
 
             function asteroid_ninja(ninja_ud) {
@@ -375,7 +375,7 @@ var game = {
             bottom: bounds.bottom - settings.boundary.bottom,
             top:    bounds.top    + settings.boundary.top,
         };
-        
+
         // load bots
         for(var i=0; i<settings.bots.amount; ++i) {
             var id = game.create_ninja();
@@ -481,7 +481,7 @@ var game = {
             m_guns[i].bullet_col_buffer.num_items = colors.length / 4;
         }
     },
-    
+
     generate_particles_gl_buffers: function(){
         for(var i=0; i<m_particles.length; ++i) {
             var r = m_guns[i].radius;
@@ -849,7 +849,7 @@ var game = {
             x: x,
             y: y
         };
-        
+
         return id;
     },
 
@@ -903,7 +903,7 @@ var game = {
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, m_guns[this.gun_type].bullet_col_buffer);
                     gl.vertexAttribPointer(game.color_shader_program.vertex_color_attribute, m_guns[this.gun_type].bullet_col_buffer.item_size, gl.FLOAT, false, 0, 0);
-                    
+
                     gl.uniformMatrix4fv(game.color_shader_program.perspective_matrix_uniform, false, game.perspective_matrix);
                     gl.uniformMatrix4fv(game.color_shader_program.model_view_matrix_uniform, false, game.model_view_matrix);
 
@@ -1003,7 +1003,7 @@ var game = {
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, m_ninjas[this.ninja_type].col_buffer);
                     gl.vertexAttribPointer(game.color_shader_program.vertex_color_attribute, m_ninjas[this.ninja_type].col_buffer.item_size, gl.FLOAT, false, 0, 0);
-                    
+
                     gl.uniformMatrix4fv(game.color_shader_program.perspective_matrix_uniform, false, game.perspective_matrix);
                     gl.uniformMatrix4fv(game.color_shader_program.model_view_matrix_uniform, false, game.model_view_matrix);
 
@@ -1049,7 +1049,7 @@ var game = {
                                 this.respawn_counter = 10000;
                             }else{
                                 var s = game.random_spawn_point();
-                                this.spawn(s.x, s.y); 
+                                this.spawn(s.x, s.y);
                             }
                         }
                     }
@@ -1150,7 +1150,7 @@ var game = {
                }else{
                     $("#overlay").hide();
                }
-                
+
             },
 
             fire_jetpack: function() {
@@ -1244,7 +1244,7 @@ var game = {
                 }
 
                 if(game.mouseDown[2]) {
-                   this.n.fire_jetpack(); 
+                   this.n.fire_jetpack();
                 }
                 this.n.menuUp(0);
                 switch(game.keyResult) {
@@ -1273,7 +1273,7 @@ var game = {
                     //     game.toggleMenuDown();
                     //     break;
                 }
-                
+
                 if(game.keyResult & game.KEY_TOSS) {
                     this.toss_counter++;
                 } else if(this.toss_counter > 0) {
@@ -1385,13 +1385,13 @@ var game = {
 
 
         for(var i=0; i<verts.length; i++) {
-            var vertices = [ 
-                new Box2D.b2Vec2( 0.0, 0.0 ), 
-                verts[i], 
-                verts[(i+1) % verts.length] 
+            var vertices = [
+                new Box2D.b2Vec2( 0.0, 0.0 ),
+                verts[i],
+                verts[(i+1) % verts.length]
             ];
 
-            var polygonShape = new Box2D.b2PolygonShape();                
+            var polygonShape = new Box2D.b2PolygonShape();
             var buffer = Box2D.allocate(vertices.length * 8, 'float', Box2D.ALLOC_STACK);
             var offset = 0;
 
@@ -1401,8 +1401,8 @@ var game = {
             Box2D.setValue(buffer+(8),    vertices[1].get_x(), 'float');
             Box2D.setValue(buffer+(8+4),  vertices[1].get_y(), 'float');
             Box2D.setValue(buffer+(16),   vertices[2].get_x(), 'float');
-            Box2D.setValue(buffer+(16+4), vertices[2].get_y(), 'float');      
-            
+            Box2D.setValue(buffer+(16+4), vertices[2].get_y(), 'float');
+
             var ptr_wrapped = Box2D.wrapPointer(buffer, Box2D.b2Vec2);
             polygonShape.Set(ptr_wrapped, vertices.length);
 
@@ -1417,7 +1417,7 @@ var game = {
             fd.set_restitution(0.1);
             fd.set_userData(id);
             fd.set_filter(filter);
-            
+
             body.CreateFixture(fd);
         }
 
@@ -1484,7 +1484,7 @@ var game = {
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, m_crates[this.crate_type].col_buffer);
                     gl.vertexAttribPointer(game.color_shader_program.vertex_color_attribute, m_crates[this.crate_type].col_buffer.item_size, gl.FLOAT, false, 0, 0);
-                    
+
                     gl.uniformMatrix4fv(game.color_shader_program.perspective_matrix_uniform, false, game.perspective_matrix);
                     gl.uniformMatrix4fv(game.color_shader_program.model_view_matrix_uniform, false, game.model_view_matrix);
 
@@ -1507,7 +1507,7 @@ var game = {
             }
         }
         var id = game.add_user_data({ type: 'particle' });
-        
+
         game.particles[id] = {
             x:  x,
             y:  y,
@@ -1536,7 +1536,7 @@ var game = {
 
                     gl.bindBuffer(gl.ARRAY_BUFFER, m_particles[this.type].col_buffer);
                     gl.vertexAttribPointer(game.color_shader_program.vertex_color_attribute, m_particles[this.type].col_buffer.item_size, gl.FLOAT, false, 0, 0);
-                    
+
                     gl.uniformMatrix4fv(game.color_shader_program.perspective_matrix_uniform, false, game.perspective_matrix);
                     gl.uniformMatrix4fv(game.color_shader_program.model_view_matrix_uniform, false, game.model_view_matrix);
 
@@ -1545,7 +1545,7 @@ var game = {
             }
         };
     },
-    
+
     step: function() {
         this.world.Step(1 / 60, 10, 10);
         this.iteration++;
@@ -1574,7 +1574,7 @@ var game = {
             }
         }
 
-        var lastManVictoryCheck = 0; 
+        var lastManVictoryCheck = 0;
         var stockVictoryCheck = 1;
         var guyCount = 0;
         for(var i in this.ninjas) {
@@ -1584,19 +1584,19 @@ var game = {
 
             // I was trying to get this damage watcher integrated into bounds_check, but I couldnt figure out how to use the object properly
             if((! this.bounds_check(m.body)) || (m.damage >= m_ninjas[m.ninja_type].max_damage)) m.alive = false;
-            
 
-            
+
+
             if(! m.alive && m.respawn_counter == 0) {
                 var delayMod = 1;
-                
+
                 if (settings.victoryCondition.lastMan){
                     m.deaths++;
                     console.log("ninja death: " + m.deaths);
                     delayMod = m.deaths * (m.deaths / 2);
                 }
-                
-                
+
+
                 if (settings.victoryCondition.stock){
                     m.stock--;
                     console.log("stock: " + m.stock);
@@ -1676,7 +1676,7 @@ var game = {
 
         gl.drawArrays(gl.TRIANGLES, 0, game.boundary_vert_pos_buffer.num_items);
     },
-    
+
 
     render: function() {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -1750,17 +1750,17 @@ var game = {
                 }
                 return hud;
             }
-            
+
             hud.fillStyle = "white";
-            
+
             hud.font      = Math.floor(hud_height * 0.5) + "px Andale Mono";
             // hud.fillText(Math.floor(game.ninja.n.damage * 100) + "%", 10, hud_height * 0.9);
             // hud.fillText("GUNZ", 20, 20);
 
 
-            
+
             hud.save();
-                
+
                 if(game.ninja.n.alive) {
                     hud.fillText(Math.floor(game.ninja.n.damage * 100) + "%", 10, hud_height * 0.9);
 
@@ -1850,7 +1850,7 @@ var game = {
             game.camninja = game.ninjas[id];
             themeSong.stop();
         }
-        
+
         $('#overlay').fadeOut(100);
     }
 
