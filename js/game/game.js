@@ -451,15 +451,14 @@ var game = {
 
       var vertices = [];
       var r = 1;
-      // vertices.push(-r, -(r/3), 0);
-      // vertices.push( r, -(r/3), 0);
-      // vertices.push( r,  (r/3), 0);
-      // vertices.push(-r,  (r/3), 0);
-      vertices.push(-r, -r, 0);
-      vertices.push( r, -r, 0);
-      vertices.push( r,  r, 0);
-      vertices.push(-r,  r, 0);
-      // console.log(m);
+      vertices.push(-r, -(r/3), 0);
+      vertices.push( r, -(r/3), 0);
+      vertices.push( r,  (r/3), 0);
+      vertices.push(-r,  (r/3), 0);
+      // vertices.push(-r, -r, 0);
+      // vertices.push( r, -r, 0);
+      // vertices.push( r,  r, 0);
+      // vertices.push(-r,  r, 0);
 
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
       m.pos_buffer.item_size = 3;
