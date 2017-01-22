@@ -1,6 +1,143 @@
+var socket = new WebSocket("ws://127.0.0.1:3070", "protocolOne");
+socket.onopen = function(evt) {
+    if (! rtc_peer_conn) {
+        init_rtc();
+    }
+};
+
+socket.onmessage = function(evt) {
+    var data = JSON.parse(evt.data);
+    console.log(data);
+
+    if (data.type == "SDP") {
+        if (data.message.sdp) {
+            rtc_peer_conn.setRemoteDescription(new RTCSessionDescription(data.message.sdp), function () {
+                // if we received an offer, we need to answer
+                if (rtc_peer_conn.remoteDescription.type == 'offer') {
+                    rtc_peer_conn.createAnswer(send_local_desc, log_error);
+                }
+            }, log_error);
+        } else {
+            //rtc_peer_conn.addIceCandidate(new RTCIceCandidate(data.message.candidate));
+        }
+    }        
+};
+
+ 
+var configuration = {
+    'iceServers': [{
+        'url': 'stun:stun.l.google.com:19302'
+    }]
+};
+ 
+var rtc_peer_conn;
+ 
+var data_channel_options = {
+    ordered: false, //no guaranteed delivery, unreliable but faster
+    maxRetransmitTime: 1000, //milliseconds
+};
+ 
+
+var data_channel;
+
+
+
+function send_local_desc(desc) {
+    rtc_peer_conn.setLocalDescription(desc, function () {
+        socket.send(JSON.stringify({
+            "emit":"signal",
+            "type":"SDP",
+            "message": {
+                'sdp': rtc_peer_conn.localDescription
+            }
+        }));
+    }, log_error);
+}
+
+
+function init_rtc() {
+    rtc_peer_conn = new RTCPeerConnection(configuration, null);
+    data_channel = rtc_peer_conn.createDataChannel('textMessages', data_channel_options);
+    data_channel.onopen = data_channel_state_changed;
+    rtc_peer_conn.ondatachannel = receive_data_channel;
+
+    // send any ice candidates to the other peer
+    rtc_peer_conn.onicecandidate = function (evt) {
+        if(evt.candidate) {
+            socket.send(JSON.stringify({
+                "emit": "signal",
+                "type":"ice_candidate",
+                "message": {
+                    'candidate': evt.candidate
+                },
+                "room": "textMessages"
+            }));
+        }
+    };
+
+    // let the 'negotiationneeded' event trigger offer generation
+    rtc_peer_conn.onnegotiationneeded = function () {
+        rtc_peer_conn.createOffer(send_local_desc, log_error);
+    }  
+}
+
+function data_channel_state_changed() {
+    if (data_channel.readyState === 'open') {
+        data_channel.onmessage = receive_data_channel_message;
+    }
+
+    console.log('data_channel_state_changed');
+}
+
+function receive_data_channel(event) {
+    data_channel = event.channel;
+    data_channel.onmessage = receive_data_channel_message;
+    console.log('receive_data_channel');
+}
+
+
+function receive_data_channel_message(event) {        
+    console.log('receive_data_channel_message: ' + event.data);
+    if (event.data.split(" ")[0] == "memoryFlipTile") {
+        //var tileToFlip = event.data.split(" ")[1];
+    } else if (event.data.split(" ")[0] == "newBoard") {
+    }
+}
+
+
+function log_error(e) {
+    console.log(e);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var rng_seed = "" + 1000; //Math.floor(Math.random() * 1000000);
 console.log("rng_seed: " + rng_seed);
-
 
 // Array Remove - By John Resig (MIT Licensed)
 Array.prototype.remove = function(from, to) {
@@ -1870,7 +2007,7 @@ setInterval(function() {
 
 window.requestAnimationFrame(game.render);
 var themeSong=new Sound("/audioAssets/OST/smugrubberTheme.mp3",100,true);
-themeSong.start();
+//themeSong.start();
 
 function Sound(source,volume,loop)
 {
