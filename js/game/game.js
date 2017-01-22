@@ -1,135 +1,104 @@
-var socket = new WebSocket("ws://127.0.0.1:3070", "protocolOne");
-socket.onopen = function(evt) {
-    if (! rtc_peer_conn) {
-        init_rtc();
-    }
-};
+var server = {
+    rtc_peer_conn: null,
+    data_channel: null,
+    socket: null,
 
-socket.onmessage = function(evt) {
-    var data = JSON.parse(evt.data);
-    console.log(data);
+    log_error: function(e) {
+        console.log(e);
+    },
 
-    if (data.type == "SDP") {
-        if (data.message.sdp) {
-            rtc_peer_conn.setRemoteDescription(new RTCSessionDescription(data.message.sdp), function () {
-                // if we received an offer, we need to answer
-                if (rtc_peer_conn.remoteDescription.type == 'offer') {
-                    rtc_peer_conn.createAnswer(send_local_desc, log_error);
-                }
-            }, log_error);
-        } else {
-            //rtc_peer_conn.addIceCandidate(new RTCIceCandidate(data.message.candidate));
-        }
-    }        
-};
-
- 
-var configuration = {
-    'iceServers': [{
-        'url': 'stun:stun.l.google.com:19302'
-    }]
-};
- 
-var rtc_peer_conn;
- 
-var data_channel_options = {
-    ordered: false, //no guaranteed delivery, unreliable but faster
-    maxRetransmitTime: 1000, //milliseconds
-};
- 
-
-var data_channel;
-
-
-
-function send_local_desc(desc) {
-    rtc_peer_conn.setLocalDescription(desc, function () {
-        socket.send(JSON.stringify({
-            "emit":"signal",
-            "type":"SDP",
-            "message": {
-                'sdp': rtc_peer_conn.localDescription
-            }
-        }));
-    }, log_error);
-}
-
-
-function init_rtc() {
-    rtc_peer_conn = new RTCPeerConnection(configuration, null);
-    data_channel = rtc_peer_conn.createDataChannel('textMessages', data_channel_options);
-    data_channel.onopen = data_channel_state_changed;
-    rtc_peer_conn.ondatachannel = receive_data_channel;
-
-    // send any ice candidates to the other peer
-    rtc_peer_conn.onicecandidate = function (evt) {
-        if(evt.candidate) {
-            socket.send(JSON.stringify({
-                "emit": "signal",
-                "type":"ice_candidate",
+    send_local_desc: function(desc) {
+        server.rtc_peer_conn.setLocalDescription(desc, function () {
+            server.socket.send(JSON.stringify({
+                "emit":"signal",
+                "type":"SDP",
                 "message": {
-                    'candidate': evt.candidate
-                },
-                "room": "textMessages"
+                    'sdp': server.rtc_peer_conn.localDescription
+                }
             }));
-        }
-    };
+        }, server.log_error);
+    },
 
-    // let the 'negotiationneeded' event trigger offer generation
-    rtc_peer_conn.onnegotiationneeded = function () {
-        rtc_peer_conn.createOffer(send_local_desc, log_error);
-    }  
-}
 
-function data_channel_state_changed() {
-    if (data_channel.readyState === 'open') {
-        data_channel.onmessage = receive_data_channel_message;
+    receive_data_channel_message: function(evt) {        
+        console.log('receive_data_channel_message: ' + evt.data);
+        server.parse_server_message(evt.data);
+    },
+
+    parse_server_message: function(msg) {
+        console.log('parse_server_message');
+        console.log(msg);
+    },
+
+    init: function() {
+        server.socket = new WebSocket("ws://" + settings.server.signal_server, "protocolOne");
+
+        server.socket.onopen = function(evt) {
+            server.rtc_peer_conn = new RTCPeerConnection(settings.server.rtc_peer_connection_options, null);
+            server.data_channel  = server.rtc_peer_conn.createDataChannel('textMessages', settings.server.data_channel_options);
+            server.data_channel.onopen = function() {
+                console.log('data_channel_state_changed');
+
+                if(server.data_channel.readyState === 'open') {
+                    server.data_channel.onmessage = server.receive_data_channel_message;
+                }
+            };
+
+            server.rtc_peer_conn.ondatachannel = function(evt) {
+                console.log('receive_data_channel');
+
+                server.data_channel = evt.channel;
+                server.data_channel.onmessage = server.receive_data_channel_message;
+            };
+
+            // send any ice candidates to the other peer
+            server.rtc_peer_conn.onicecandidate = function (evt) {
+                if(evt.candidate) {
+                    server.socket.send(JSON.stringify({
+                        "emit": "signal",
+                        "type":"ice_candidate",
+                        "message": {
+                            'candidate': evt.candidate
+                        },
+                        "room": "textMessages"
+                    }));
+                }
+            };
+
+            // let the 'negotiationneeded' event trigger offer generation
+            server.rtc_peer_conn.onnegotiationneeded = function() {
+                server.rtc_peer_conn.createOffer(server.send_local_desc, server.log_error);
+            }
+        };
+
+        server.socket.onmessage = function(evt) {
+            var data = JSON.parse(evt.data);
+            console.log(data);
+
+            if(data.emit == "signal") {
+                if(data.type == "SDP") {
+                    if(data.message.sdp) {
+                        server.rtc_peer_conn.setRemoteDescription(new RTCSessionDescription(data.message.sdp), function () {
+                            // if we received an offer, we need to answer
+                            if(server.rtc_peer_conn.remoteDescription.type == 'offer') {
+                                server.rtc_peer_conn.createAnswer(server.send_local_desc, server.log_error);
+                            }
+                        }, server.log_error);
+                    }
+                }        
+                if(data.type == "ice_candidate") {
+                    server.rtc_peer_conn.addIceCandidate(new RTCIceCandidate(data.message.candidate));
+                }
+            }
+        };
+    },
+
+    send: function(data) {
+        server.data_channel.send(JSON.stringify(data));
     }
+};
 
-    console.log('data_channel_state_changed');
-}
-
-function receive_data_channel(event) {
-    data_channel = event.channel;
-    data_channel.onmessage = receive_data_channel_message;
-    console.log('receive_data_channel');
-}
-
-
-function receive_data_channel_message(event) {        
-    console.log('receive_data_channel_message: ' + event.data);
-    if (event.data.split(" ")[0] == "memoryFlipTile") {
-        //var tileToFlip = event.data.split(" ")[1];
-    } else if (event.data.split(" ")[0] == "newBoard") {
-    }
-}
-
-
-function log_error(e) {
-    console.log(e);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+server.init();
 
 
 

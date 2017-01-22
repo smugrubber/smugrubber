@@ -75,5 +75,21 @@ var settings = {
         target_switch_nsec: 5,
         jump_nsec: 5,
         max_follow_d: 20
-    }
+    },
+    server: {
+        signal_server: "127.0.0.1:3070",
+
+        // how our connection set up
+        data_channel_options: {
+            ordered: false,          // no guaranteed delivery, unreliable but faster
+            maxRetransmitTime: 1000, // ms
+        },
+
+        // store connection data
+        rtc_peer_connection_options: {
+            'iceServers': [{
+                'url': 'stun:stun.l.google.com:19302'
+            }]
+        }
+    },
 };
