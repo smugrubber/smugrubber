@@ -1,114 +1,102 @@
-var webrtc = require('wrtc');
+#!/usr/bin/env node
+
+
+const webrtc  = require('wrtc');
+const config  = require('./config');
+const WebSocket = require('ws');
 
 var RTCPeerConnection     = webrtc.RTCPeerConnection;
 var RTCSessionDescription = webrtc.RTCSessionDescription;
 var RTCIceCandidate       = webrtc.RTCIceCandidate;
 
-var pc1 = new RTCPeerConnection();
-var pc2 = new RTCPeerConnection();
 
-pc1.onicecandidate = function(candidate) {
-    if(!candidate.candidate) return;
-    pc2.addIceCandidate(candidate.candidate);
-}
+var wss = new WebSocket.Server({ port: config.port });
+console.log('smugrubber realtime server started on 127.0.0.1:' + config.port);
 
-pc2.onicecandidate = function(candidate) {
-    if(!candidate.candidate) return;
-    pc1.addIceCandidate(candidate.candidate);
-}
+var rtc_peer_conn;
+ 
+var data_channel_options = {
+    ordered: false, //no guaranteed delivery, unreliable but faster
+    maxRetransmitTime: 1000, //milliseconds
+};
+ 
+var data_channel;
 
-function handle_error(error)
-{
-    throw error;
-}
 
-function create_data_channels() {
-    var dc1 = pc1.createDataChannel('test');
-    dc1.onopen = function() {
-        console.log("pc1: data channel open");
-        dc1.onmessage = function(event) {
-            var data = event.data;
-            console.log("dc1: received '"+data+"'");
-            console.log("dc1: sending 'pong'");
-            dc1.send("pong");
-        }
-    }
+console.log('initialize_rtc');
+var configuration = {
+    'iceServers': [{
+        'url': 'stun:stun.l.google.com:19302'
+    }]
+};
 
-    var dc2;
-    pc2.ondatachannel = function(event) {
-        dc2 = event.channel;
-        dc2.onopen = function() {
-            console.log("pc2: data channel open");
-            dc2.onmessage = function(event) {
-                var data = event.data;
-                console.log("dc2: received '"+data+"'");
-                console.log("dc2: sending 'ping'");
-                dc2.send("ping");
+rtc_peer_conn = new RTCPeerConnection(configuration, null);
+rtc_peer_conn.ondatachannel = receive_data_channel;
+
+data_channel = rtc_peer_conn.createDataChannel('textMessages', data_channel_options);
+data_channel.onopen = data_channel_state_changed;
+
+wss.on('connection', function connection(ws) {
+    ws.on('message', function incoming(message) {
+        console.log('received: ' + message);
+
+        var data = JSON.parse(message);
+        if(data.emit == "signal") {
+            if(data.type == "SDP") {
+                console.log("sdp");
+
+                rtc_peer_conn.setRemoteDescription(new RTCSessionDescription(data.message.sdp), function () {
+                    // if we received an offer, we need to answer
+                    if (rtc_peer_conn.remoteDescription.type == 'offer') {
+                        rtc_peer_conn.createAnswer(function(desc) {
+                            rtc_peer_conn.setLocalDescription(desc, function () {
+                                ws.send(JSON.stringify({
+                                    "emit":"signal",
+                                    "type":"SDP",
+                                    "message": {
+                                        'sdp': rtc_peer_conn.localDescription
+                                    }
+                                }));
+                            }, log_error);
+                        }, log_error);
+                    }
+                }, log_error);
             }
-            console.log("dc2: sending 'ping'");
-            dc2.send("ping");
-        };
+
+            if(data.type == "ice_candidate") {
+                console.log('ice_candidate');
+
+                rtc_peer_conn.addIceCandidate(new RTCIceCandidate(data.message.candidate));
+            }
+        }
+    });
+});
+
+function data_channel_state_changed()
+{
+    if (data_channel.readyState === 'open') {
+        data_channel.onmessage = receive_data_channel_message;
     }
 
-    create_offer();
+    console.log('data_channel_state_changed: ' + data_channel.readyState);
 }
 
-function create_offer() {
-    console.log('pc1: create offer');
-    pc1.createOffer(set_pc1_local_description, handle_error);
+function receive_data_channel(event)
+{
+    console.log('receive_data_channel: ' + event.channel);
+
+    data_channel = event.channel;
+    data_channel.onmessage = receive_data_channel_message;
 }
 
-function set_pc1_local_description(desc) {
-    console.log('pc1: set local description');
-    pc1.setLocalDescription(
-        new RTCSessionDescription(desc),
-        set_pc2_remote_description.bind(undefined, desc),
-        handle_error
-    );
+
+function receive_data_channel_message(event)
+{
+    console.log('receive_data_channel_message: ' + event.data);
+    data_channel.send('weeeee');
 }
 
-function set_pc2_remote_description(desc) {
-    console.log('pc2: set remote description');
-    pc2.setRemoteDescription(
-        new RTCSessionDescription(desc),
-        create_answer,
-        handle_error
-    );
+function log_error(e)
+{
+    console.log(e);
 }
-
-function create_answer() {
-    console.log('pc2: create answer');
-    pc2.createAnswer(
-        set_pc2_local_description,
-        handle_error
-    );
-}
-
-function set_pc2_local_description(desc) {
-    console.log('pc2: set local description');
-    pc2.setLocalDescription(
-        new RTCSessionDescription(desc),
-        set_pc1_remote_description.bind(undefined, desc),
-        handle_error
-    );
-}
-
-function set_pc1_remote_description(desc) {
-    console.log('pc1: set remote description');
-    pc1.setRemoteDescription(
-        new RTCSessionDescription(desc),
-        wait,
-        handle_error
-    );
-}
-
-function wait() {
-    console.log('waiting');
-}
-
-function run() {
-    create_data_channels();
-}
-
-run();
-
