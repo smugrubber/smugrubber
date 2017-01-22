@@ -85,7 +85,7 @@ var m_guns = [
     },
     {
         name: "machine gun",
-        src: "machine.png",
+        src: "gunner.png",
         strength:     40.0,
         radius:       0.15,
         density:      1.0,
@@ -110,6 +110,7 @@ var m_guns = [
     for(var i=0; i<m_guns.length; ++i) {
         m_guns[i].sprite = new Image();
         m_guns[i].sprite.src = "/img/sprites/guns/" + m_guns[i].src;
+        // m_guns[i].sprite.src = "/img/sprites/guns/bun.png";
         delete m_guns[i].src;
     }
 })();
