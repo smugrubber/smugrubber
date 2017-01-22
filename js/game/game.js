@@ -15,6 +15,13 @@ gameCvs.height = document.documentElement.clientHeight;
 
 var gl = initGL();
 
+(function() {
+    for(var i=0; i<m_guns.length; ++i) {
+        m_guns[i].sprite = new Image();
+        m_guns[i].sprite.src = "/img/sprites/guns/" + m_guns[i].src;
+        delete m_guns[i].src;
+    }
+})();
 
 window.onresize = function() {
     gameCvs.width  = document.documentElement.clientWidth;

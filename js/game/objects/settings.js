@@ -93,3 +93,7 @@ var settings = {
         }
     },
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = settings;
+}

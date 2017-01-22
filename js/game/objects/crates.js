@@ -31,3 +31,6 @@ var m_crates = [
     }
 ];
 
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = m_crates;
+}

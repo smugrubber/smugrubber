@@ -106,10 +106,6 @@ var m_guns = [
     }
 ];
 
-(function() {
-    for(var i=0; i<m_guns.length; ++i) {
-        m_guns[i].sprite = new Image();
-        m_guns[i].sprite.src = "/img/sprites/guns/" + m_guns[i].src;
-        delete m_guns[i].src;
-    }
-})();
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = m_guns;
+}

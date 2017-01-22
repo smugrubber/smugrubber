@@ -24,3 +24,8 @@ var m_ninjas = [
         }
     }
 ];
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = m_ninjas;
+}
+
