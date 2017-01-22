@@ -10,7 +10,7 @@ Running Instructions
   -  ``` php -S localhost:8000 ```
 - Open http://127.0.0.1:8000 in your browser
 
-Play the latest stable version at https://play.smugrubber.com/
+Play the latest stable version at http://play.smugrubber.com/
 
 For Windows
 ===========
