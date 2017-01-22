@@ -19,7 +19,7 @@ var server = {
 
     parse_client_message: function(ws, msg)
     {
-       server.data_channels[ws].send('weeeee');
+       server.data_channels[ws].send(JSON.stringify({'test': 'weeeee'}));
     },
 
     send_data: function(ws, data)

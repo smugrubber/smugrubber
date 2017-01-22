@@ -7,8 +7,6 @@
     "wrtc": "^0.0.61"
   },
   "devDependencies": {
-    "express": "^4.14.0",
-    "socket.io": "^1.7.2",
     "wrtc": "0.0.61",
     "ws": "^1.1.1"
   },
