@@ -4,12 +4,21 @@ var config = {
     //should we console.log everything?
     verbose: true,
  
-    //ip addresses allowed to add & modify users
+    // ip addresses allowed to admin
     whitelist: ['127.0.0.1'],
 
-    ice_servers: [
-        'stun:stun.l.google.com:19302'
-    ]
+    // store connection data
+    rtc_peer_connection_options: {
+        'iceServers': [{
+            'url': 'stun:stun.l.google.com:19302'
+        }]
+    },
+
+    // how our connection set up
+    data_channel_options: {
+        ordered: false,          // no guaranteed delivery, unreliable but faster
+        maxRetransmitTime: 1000, // ms
+    }
 };
  
 module.exports = config;
