@@ -1,16 +1,16 @@
 # SMUGRUBBER
 ![Alpha Build Screencapture](https://github.com/frigginglorious/smugrubber/raw/master/img/screencap.gif)
+
 #### The Game of Unrelenting Smuggery
 Running Instructions
-- download github
-- then download the repo
-- download & install python
-- then go into the directory ie ~/Docsandsettsings/smugrubber
-- and in console do:
-  -  ``` python -m SimpleHTTPServer 8000 ``` 
-- then open http://127.0.0.1:8000 in your browser
+- Download this repo
+- Go into the directory ie ```cd ~/Docsandsettsings/smugrubber```
+- Run a server from the folder directory. In console do ONE of these:
+  -  ``` python -m SimpleHTTPServer 8000 ```
+  -  ``` php -S localhost:8000 ```
+- Open http://127.0.0.1:8000 in your browser
 
-once we get website up itll be easier but for now thats best way
+Play the latest stable version at https://smugrubber.com/
 
 For Windows
 ===========
@@ -24,3 +24,8 @@ Sounds (c) by Michel Baradari apollo-music.de
 Licensed under CC BY 3.0 http://creativecommons.org/licenses/by/3.0/
 
 Hosted on opengameart.org
+
+OST
+===========
+Smugrubber Original Soundtrack by Zac Herbison
+https://soundcloud.com/cause_in_effect
