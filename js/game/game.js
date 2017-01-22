@@ -917,6 +917,13 @@ var game = {
     var id = game.add_user_data({ type: 'bullet', gun_type: gun_type });
     var radius = m_guns[gun_type].radius;
 
+    if(game.ninja){
+      var bulletDist = dist(game.ninja.n.body.GetPosition().get_x(),game.ninja.n.body.GetPosition().get_y(),x,y )
+      if(bulletDist < 100){
+        playSound(shot, bulletDist);
+      }
+    }
+
     var bd = new Box2D.b2BodyDef();
     bd.set_type(Box2D.b2_dynamicBody);
     bd.set_position( new Box2D.b2Vec2(x, y) );
@@ -1130,7 +1137,21 @@ var game = {
         }
 
         if(this.gun.reloadtime > 0) {
+          if (this.reloadAudio == null){
+            this.reloadAudio = true;
+
+            var guyDist = dist(game.ninja.n.body.GetPosition().get_x(),game.ninja.n.body.GetPosition().get_y(),this.body.GetPosition().get_x(),this.body.GetPosition().get_y())
+            if(guyDist < 100){
+              playSound(reload, guyDist);
+            }
+
+          }
           this.gun.reloadtime--;
+        }else{
+          if (this.reloadAudio != null){
+            reload.pause();
+            delete this.reloadAudio;
+          }
         }
 
         if(this.jetpack.ammo < m_ninjas[this.ninja_type].jetpack.max_ammo) {
@@ -1973,6 +1994,12 @@ function Sound(source,volume,loop)
     this.loop=loop;
   }
 }
+function playSound(sound, distance = 0){
+  distance = (100 - distance) * .01;
+  sound.volume(distance);
+  sound.play();
+}
+
 function changeWeapon(gun_type = -1,id = 0){
   if(gun_type < 0){
     var gun_type = Math.floor(Math.random() * m_guns.length);
