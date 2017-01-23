@@ -133,6 +133,13 @@ var game = {
                 return;
             }
 
+            if(typeof game.user_data[udA] == 'undefined') {
+                console.log('udA undefined');
+            }
+            if(typeof game.user_data[udB] == 'undefined') {
+                console.log('udB undefined');
+            }
+
             var tA = game.user_data[udA].type;
             var tB = game.user_data[udB].type;
 
@@ -175,6 +182,7 @@ var game = {
             var impact_force = Math.abs(vdx) + Math.abs(vdy);
 
             if(tA == 'ninja' && tB == 'ninja') {
+                return; 
                 var ninjaA = game.ninjas[udA];
                 var ninjaB = game.ninjas[udB];
 
@@ -196,6 +204,7 @@ var game = {
 
 
             function bullet_ninja(bullet_ud, ninja_ud, angle) {
+
                 var bullet = game.bullets[bullet_ud];
                 var ninja = game.ninjas[ninja_ud];
 
@@ -905,6 +914,7 @@ var game = {
             ninja_type: ninja.ninja_type,
             stock: ninja.stock,
             deaths: ninja.deaths,
+            damage: ninja.damage,
             facing_dir: -1,
             gun_angle: 0.0,
             touching_ground: false,
@@ -1031,6 +1041,11 @@ var game = {
                 if(this.jetpack.ammo < m_ninjas[this.ninja_type].jetpack.max_ammo) {
                     this.jetpack.ammo += m_ninjas[this.ninja_type].jetpack.reload_rate;
                 }
+            },
+
+            get_shot: function(bullet)
+            {
+                // pass
             },
 
             menuUp: function(bool = 0) {

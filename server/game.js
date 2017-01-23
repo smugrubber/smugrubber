@@ -317,11 +317,10 @@ var game = {
         
         // load bots
         for(var i=0; i<settings.bots.amount; ++i) {
-            /*
             var id = game.create_ninja();
             var s = game.random_spawn_point();
             game.ninjas[id].spawn(s.x, s.y);
-            game.ninja_ais.push(game.ninja_ai_controller(game.ninjas[id]));*/
+            game.ninja_ais.push(game.ninja_ai_controller(game.ninjas[id]));
         }
     },
 
@@ -497,7 +496,6 @@ var game = {
 
             update: function() {
                 if(this.input.mouse_down[0] ) {
-                    console.log(this.input.mouse_angle);
                     this.shoot(this.input.mouse_angle);
                 }
 
@@ -932,7 +930,6 @@ var game = {
 
         for(var i in this.ninjas) {
             var m = this.ninjas[i];
-            console.log(i + " :: x: " + m.body.GetPosition().get_x() + " y: " + m.body.GetPosition().get_y());
             m.update();
 
             if(! this.bounds_check(m.body)) {

@@ -181,14 +181,15 @@ var server = {
             }
         }
 
+        var new_ninja_data = [];
+        // todo
 
-        var bullet_data = [];
+        var new_bullet_data = [];
         for(var i=0; i<game.send_buffer.length; ++i) {
             if(game.send_buffer[i].type == "bullet") {
-                console.log("send bullet");
                 var m = game.bullets[game.send_buffer[i].id];
 
-                bullet_data.push({
+                new_bullet_data.push({
                     "id":       m.id,
                     'x':        m.body.GetPosition().get_x(),
                     'y':        m.body.GetPosition().get_y(),
@@ -202,11 +203,12 @@ var server = {
 
         game.send_buffer = [];
         server.broadcast({
-            "type":      "step",
-            "iteration": game.iteration,
-            "ninjas":    ninja_data,
-            "crates":    crate_data,
-            "bullets":   bullet_data,
+            "type":        "step",
+            "iteration":   game.iteration,
+            "ninjas":      ninja_data,
+            "crates":      crate_data,
+            "new_ninjas":  new_ninja_data,
+            "new_bullets": new_bullet_data,
         });
     }
 };
@@ -260,6 +262,7 @@ function handle_hello(ws, data)
             'x':          game.ninjas[i].body.GetPosition().get_x(),
             'y':          game.ninjas[i].body.GetPosition().get_y(),
             'alive':      game.ninjas[i].alive,
+            'damage':     game.ninjas[i].damage,
             'ninja_type': game.ninjas[i].ninja_type,
             'stock':      game.ninjas[i].stock,
             'deaths':     game.ninjas[i].deaths,

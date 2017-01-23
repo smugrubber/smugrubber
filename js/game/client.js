@@ -100,6 +100,11 @@ var client = {
     },
 
     send: function(data) {
+        if(! client.data_channel.readyState == "open") {
+            console.log("data_channel not ready");
+            return;
+        }
+
         client.data_channel.send(JSON.stringify(data));
     },
 
@@ -192,6 +197,10 @@ function handle_step(data)
         return;
     }
 
+    if(! game.in_game) {
+        return;
+    }
+
     for(var i=0; i<data.ninjas.length; ++i) {
         game.ninjas[data.ninjas[i].id].body.SetTransform(new Box2D.b2Vec2(data.ninjas[i].x, data.ninjas[i].y), 0);
         game.ninjas[data.ninjas[i].id].body.SetLinearVelocity(new Box2D.b2Vec2(data.ninjas[i].px, data.ninjas[i].py));
@@ -202,16 +211,13 @@ function handle_step(data)
         game.crates[data.crates[i].id].body.SetLinearVelocity(new Box2D.b2Vec2(data.crates[i].px, data.crates[i].py));
     }
 
-    for(var i=0; i<data.bullets.length; ++i) {
+    for(var i=0; i<data.new_ninjas.length; ++i) {
+        console.log('create_ninja');
+        game.create_ninja_from_server(data.new_ninjas[i]);
+    }
+    for(var i=0; i<data.new_bullets.length; ++i) {
         console.log('create_bullet');
-        game.create_bullet_from_server({
-            id:       data.bullets[i].id,
-            x:        data.bullets[i].x,
-            y:        data.bullets[i].y,
-            px:       data.bullets[i].px,
-            py:       data.bullets[i].py,
-            gun_type: data.bullets[i].gun_type
-        });
+        game.create_bullet_from_server(data.new_bullets[i]);
     }
 }
 
