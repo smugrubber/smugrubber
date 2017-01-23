@@ -181,11 +181,32 @@ var server = {
             }
         }
 
+
+        var bullet_data = [];
+        for(var i=0; i<game.send_buffer.length; ++i) {
+            if(game.send_buffer[i].type == "bullet") {
+                console.log("send bullet");
+                var m = game.bullets[game.send_buffer[i].id];
+
+                bullet_data.push({
+                    "id":       m.id,
+                    'x':        m.body.GetPosition().get_x(),
+                    'y':        m.body.GetPosition().get_y(),
+                    'px':       m.body.GetLinearVelocity().get_x(),
+                    'py':       m.body.GetLinearVelocity().get_y(),
+                    "gun_type": m.gun_type,
+                });
+            }
+        }
+
+
+        game.send_buffer = [];
         server.broadcast({
             "type":      "step",
             "iteration": game.iteration,
             "ninjas":    ninja_data,
             "crates":    crate_data,
+            "bullets":   bullet_data,
         });
     }
 };
@@ -322,8 +343,8 @@ function handle_ping(ws, data)
 game.init();
 setInterval(function() {
     game.step();
-}, 1000.0 / 60);
-setInterval(function() {
     server.step();
 }, 1000.0 / 60);
 
+
+module.exports = server;

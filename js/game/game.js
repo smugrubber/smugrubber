@@ -794,8 +794,14 @@ var game = {
         return id;
     },
 
-    create_bullet: function(x, y, px, py, gun_type) {
-        var id = game.add_user_data({ type: 'bullet', gun_type: gun_type });
+    create_bullet_from_server: function(bullet) {
+        var id = game.add_user_data_from_server(bullet.id, { type: 'bullet', gun_type: bullet.gun_type });
+        var x = bullet.x;
+        var y = bullet.y;
+        var px = bullet.px;
+        var py = bullet.py;
+        var gun_type = bullet.gun_type;
+
         var radius = m_guns[gun_type].radius;
 
         var bd = new Box2D.b2BodyDef();
@@ -824,6 +830,7 @@ var game = {
         var that = this;
 
         game.bullets[id] = {
+            id: id,
             body: body,
             radius: radius,
             lifetime: m_guns[gun_type].lifetime,

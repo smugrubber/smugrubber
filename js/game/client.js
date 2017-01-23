@@ -2,7 +2,7 @@ var client = {
     rtc_peer_conn: null,
     data_channel: null,
     socket: null,
-    verbose: true,
+    verbose: false,
     ping: 0,
     ping_sent: 0,
 
@@ -130,6 +130,7 @@ var client = {
             case 'hello': handle_hello(data); break;
             case 'step':  handle_step(data);  break;
             case 'pong':  handle_pong(data);  break;
+            case 'shoot': handle_shoot(data); break;
             default:
                 console.log('err :: type_not_found');
                 break;
@@ -194,15 +195,24 @@ function handle_step(data)
     for(var i=0; i<data.ninjas.length; ++i) {
         game.ninjas[data.ninjas[i].id].body.SetTransform(new Box2D.b2Vec2(data.ninjas[i].x, data.ninjas[i].y), 0);
         game.ninjas[data.ninjas[i].id].body.SetLinearVelocity(new Box2D.b2Vec2(data.ninjas[i].px, data.ninjas[i].py));
-        console.log("moved a ninja");
     }
 
     for(var i=0; i<data.crates.length; ++i) {
         game.crates[data.crates[i].id].body.SetTransform(new Box2D.b2Vec2(data.crates[i].x, data.crates[i].y), 0);
         game.crates[data.crates[i].id].body.SetLinearVelocity(new Box2D.b2Vec2(data.crates[i].px, data.crates[i].py));
-        console.log("moved a ninja");
     }
 
+    for(var i=0; i<data.bullets.length; ++i) {
+        console.log('create_bullet');
+        game.create_bullet_from_server({
+            id:       data.bullets[i].id,
+            x:        data.bullets[i].x,
+            y:        data.bullets[i].y,
+            px:       data.bullets[i].px,
+            py:       data.bullets[i].py,
+            gun_type: data.bullets[i].gun_type
+        });
+    }
 }
 
 function handle_pong(data)

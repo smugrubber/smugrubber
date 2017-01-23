@@ -1,11 +1,10 @@
-#!/usr/bin/env node
-
 const Box2D    = require('../js/libs/box2d');
 const noise    = require('../js/libs/perlin');
 const settings = require('../js/game/objects/settings');
 const m_crates = require('../js/game/objects/crates');
 const m_guns   = require('../js/game/objects/guns');
 const m_ninjas = require('../js/game/objects/ninjas');
+const server   = require('./server')
 
 
 var rng_seed = "" + 1000; //Math.floor(Math.random() * 1000000);
@@ -49,6 +48,8 @@ var game = {
     iteration: 0,
     asteroids_created: 0,
     ninja_ais: [],
+
+    send_buffer: [], // stuff to send next step, {id, type}
 
     KEY_UP   : 1,
     KEY_RIGHT: 2,
@@ -403,8 +404,9 @@ var game = {
         var that = this;
 
         game.bullets[id] = {
-            body: body,
-            radius: radius,
+            id:       id,
+            body:     body,
+            radius:   radius,
             lifetime: m_guns[gun_type].lifetime,
             gun_type: gun_type,
             alive: true,
@@ -417,6 +419,8 @@ var game = {
                 this.alive = --this.lifetime > 0;
             }
         };
+
+        game.send_buffer.push({"type": "bullet", "id": id});
     },
 
     create_ninja: function() {
