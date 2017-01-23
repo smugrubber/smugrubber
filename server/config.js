@@ -2,7 +2,7 @@ var config = {
     port: 3070,
  
     //should we console.log everything?
-    verbose: true,
+    verbose: false,
  
     // ip addresses allowed to admin
     whitelist: ['127.0.0.1'],

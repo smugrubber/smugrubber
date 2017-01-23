@@ -172,13 +172,13 @@ var game = {
             var vdx = vxA - vxB;
             var vdy = vyA - vyB;
 
-            var impactForce = Math.abs(vdx) + Math.abs(vdy);
+            var impact_force = Math.abs(vdx) + Math.abs(vdy);
 
             if(tA == 'ninja' && tB == 'ninja') {
                 var ninjaA = game.ninjas[udA];
                 var ninjaB = game.ninjas[udB];
 
-                var f = settings.collide.ninja_to_ninja_base + impactForce;
+                var f = settings.collide.ninja_to_ninja_base + impact_force;
                 var dA = ninjaA.damage;
                 var dB = ninjaB.damage;
 
@@ -200,7 +200,7 @@ var game = {
                 var ninja = game.ninjas[ninja_ud];
 
                 var gd = m_guns[bullet.gun_type].damage;
-                var f = impactForce * gd * bullet.body.GetMass();
+                var f = impact_force * gd * bullet.body.GetMass();
                 var d = ninja.damage;
 
                 var impulse = f * (d + 1.0) * settings.collide.ninja_to_bullet_mult_f;
@@ -225,8 +225,8 @@ var game = {
             function asteroid_ninja(ninja_ud) {
                 var ninja = game.ninjas[ninja_ud];
 
-                if(impactForce > settings.collide.ninja_to_asteroid_min) {
-                    ninja.damage += impactForce * settings.collide.ninja_to_asteroid_mult;
+                if(impact_force > settings.collide.ninja_to_asteroid_min) {
+                    ninja.damage += impact_force * settings.collide.ninja_to_asteroid_mult;
                 }
 
                 ninja.touching_ground = true;
@@ -236,7 +236,7 @@ var game = {
                 var crate = game.crates[crate_ud];
                 var ninja = game.ninjas[ninja_ud];
 
-                var f = impactForce * crate.body.GetMass() * m_crates[crate.type].damage;
+                var f = impact_force * crate.body.GetMass() * m_crates[crate.type].damage;
                 var d = ninja.damage;
 
                 if(f > m_crates[crate.type].min_dforce) {
@@ -244,8 +244,6 @@ var game = {
                     var impulse = f * (d + 1.0) * settings.collide.ninja_to_crate_mult_f;
 
                     bA.ApplyLinearImpulse(new Box2D.b2Vec2(Math.cos(angle) * impulse, Math.sin(angle) * impulse));
-                } else {
-                    ninja.pickup_crate(crate);
                 }
             }
 
@@ -1028,78 +1026,6 @@ var game = {
                 }
             },
 
-            move: function(dir) {
-                if(! this.alive) {
-                    return;
-                }
-
-                if(Math.abs(this.body.GetLinearVelocity().get_x()) < m_ninjas[this.ninja_type].move.max_speed || sign(dir) != sign(this.body.GetLinearVelocity().get_x())) {
-                    this.body.ApplyForceToCenter(new Box2D.b2Vec2(m_ninjas[this.ninja_type].move.strength * dir, 0.0));
-                }
-            },
-
-            shoot: function(angle) {
-                if(! this.alive) {
-                    return;
-                }
-
-                if(this.gun.fireinterval != 0 || this.gun.reloadtime != 0) {
-                    return;
-                }
-
-                if(this.gun.ammo == 0) {
-                    this.gun.ammo = m_guns[this.gun.type].ammo;
-                    this.gun.reloadtime = m_guns[this.gun.type].reloadtime;
-                    return;
-                }
-
-                var strength = m_guns[this.gun.type].strength;
-                angle += m_guns[this.gun.type].accuracy * noise.simplex2(game.iteration, 0);
-
-                if(isNaN(this.body.GetPosition().get_x())) {
-                    alert("cb x nan");
-                }
-                if(isNaN( angle)) {
-                    alert("cb angle nan");
-                }
-
-                game.create_bullet(
-                    this.body.GetPosition().get_x() + (Math.cos(angle) * m_ninjas[this.ninja_type].body.radius * 2),
-                    this.body.GetPosition().get_y() + (Math.sin(angle) * m_ninjas[this.ninja_type].body.radius * 2),
-                    this.body.GetLinearVelocity().get_x() + (Math.cos(angle) * strength),
-                    this.body.GetLinearVelocity().get_y() + (Math.sin(angle) * strength),
-                    this.gun.type
-                );
-
-                var bink_strength = m_guns[this.gun.type].selfbink;
-                var bink_angle = angle+Math.PI;
-                this.body.ApplyLinearImpulse(new Box2D.b2Vec2(Math.cos(bink_angle) * bink_strength, Math.sin(bink_angle) * bink_strength));
-
-
-                this.gun.fireinterval = m_guns[this.gun.type].fireinterval;
-                this.gun.ammo--;
-
-                if(this.gun.ammo == 0) {
-                    this.gun.ammo = m_guns[this.gun.type].ammo;
-                    this.gun.reloadtime = m_guns[this.gun.type].reloadtime;
-                    return;
-                }
-            },
-
-            jump: function() {
-                if(! this.alive) {
-                    return;
-                }
-
-                //todo fix contact detect
-                //maybe just need to loop thru clist?
-                var strength = m_ninjas[this.ninja_type].move.jump;
-                if(this.touching_ground) {
-                    this.body.ApplyLinearImpulse(new Box2D.b2Vec2(0.0, strength));
-                    this.body.SetAngularVelocity(0.0);
-                }
-            },
-
             menuUp: function(bool = 0) {
                 if(bool){
                    $("#overlay").show();
@@ -1107,65 +1033,6 @@ var game = {
                     $("#overlay").hide();
                }
                 
-            },
-
-            fire_jetpack: function() {
-                if(! this.alive) {
-                    return;
-                }
-
-                if(this.jetpack.ammo < 0) {
-                    return;
-                }
-
-                if(this.body.GetLinearVelocity().get_y() < m_ninjas[this.ninja_type].jetpack.max_speed) {
-                    this.body.ApplyLinearImpulse(new Box2D.b2Vec2(0.0, m_ninjas[this.ninja_type].jetpack.strength));
-                    game.create_particle(this.body.GetPosition().get_x(), this.body.GetPosition().get_y(), (-0.5 + Math.random()) * 0.04 , -0.1 + (-0.5 + Math.random()) * 0.04, 0);
-                }
-
-                this.jetpack.ammo--;
-            },
-
-            pickup_crate: function(crate) {
-                if(! this.alive) {
-                    return;
-                }
-
-                if(! crate.alive) {
-                    return;
-                }
-
-                // health pack
-                if(crate.type == 0) {
-                    this.damage = Math.max(0, this.damage - settings.crates.health_restore);
-                }
-                if(crate.type == 1) {
-                    this.jetpack.ammo += settings.crates.jet_fuel;
-                }
-
-                crate.alive = false;
-            },
-
-            toss: function(f, angle) {
-                if(! this.alive) {
-                    return;
-                }
-
-                console.log("toss: " + f + " : " + angle);
-                var x = this.body.GetPosition().get_x();
-                var y = this.body.GetPosition().get_y();
-                var force = m_ninjas[this.ninja_type].toss.force_mult * f;
-                var crate_type = 1;
-                game.create_crate(x + (Math.cos(angle) * ((m_ninjas[this.ninja_type].body.radius * 2) + crates[crate_type].width)),
-                    y + (Math.sin(angle) * ((m_ninjas[this.ninja_type].body.radius * 2)+ crates[crate_type].height)),
-                    this.body.GetLinearVelocity().get_x() + (Math.cos(angle) * force),
-                    this.body.GetLinearVelocity().get_y() + (Math.sin(angle) * force),
-                    crate_type
-                );
-            },
-
-            get_shot: function(bullet) {
-                bullet.alive = false;
             },
 
             set_gun: function(gun_type) {
@@ -1191,51 +1058,24 @@ var game = {
             angle: 0.0,
             toss_counter: 0,
             update: function() {
+                client.send({
+                    "type":        "control",
+                    "iteration":   game.iteration,
+                    "mouse_down":  game.mouseDown,
+                    "key_result":  game.keyResult,
+                    "mouse_angle": game.mouse_angle,
+                });
+
                 this.n.facing_dir = (game.mousex < window.innerWidth / 2) ? 1 : -1;
                 this.angle = Math.atan2((gameCvs.height / 2) - game.mousey, game.mousex - gameCvs.width / 2);
                 this.n.gun_angle = this.angle;
 
-                if(game.mouseDown[0] ) {
-                    this.n.shoot(this.angle);
-                }
-
-                if(game.mouseDown[2]) {
-                   this.n.fire_jetpack(); 
-                }
                 this.n.menuUp(0);
                 switch(game.keyResult) {
-                    case game.KEY_UP:
-                        this.n.jump();
-                        break;
-                    case game.KEY_LEFT:
-                        this.n.move(-1);
-                        break;
-                    case game.KEY_RIGHT:
-                        this.n.move(1);
-                        break;
-                    case game.KEY_UP|game.KEY_LEFT:
-                        this.n.jump();
-                        this.n.move(-1);
-                        break;
-                    case game.KEY_UP|game.KEY_RIGHT:
-                        this.n.jump();
-                        this.n.move(1);
-                        break;
+                    // todo: this should not be in this switch and should be switched out
                     case game.KEY_MENU: //Using it as menu right now cuz i dont know escape key.
                         this.n.menuUp(1);
                         break;
-                    // case game.KEY_MENU: //Using it as menu right now cuz i dont know escape key.
-                    //     console.log("ended menu");
-                    //     game.toggleMenuDown();
-                    //     break;
-                }
-                
-                if(game.keyResult & game.KEY_TOSS) {
-                    this.toss_counter++;
-                } else if(this.toss_counter > 0) {
-                    var toss_force = Math.min(this.toss_counter, 60) / 60.0;
-                    this.n.toss(toss_force, this.angle);
-                    this.toss_counter = 0;
                 }
             }
         };
@@ -1463,7 +1303,6 @@ var game = {
     
     step: function() {
         this.world.Step(1 / 60, 10, 10);
-        this.iteration++;
 
         for(var i in this.bullets) {
             var m = this.bullets[i];

@@ -2,7 +2,7 @@ var client = {
     rtc_peer_conn: null,
     data_channel: null,
     socket: null,
-    verbose: false,
+    verbose: true,
 
     log_error: function(e) {
         console.log(e);
@@ -121,6 +121,7 @@ var client = {
 
         switch(data.type) {
             case 'hello': handle_hello(data); break;
+            case 'step':  handle_step(data);  break;
             default:
                 console.log('err :: type_not_found');
                 break;
@@ -131,7 +132,12 @@ client.init();
 
 function handle_hello(data)
 {
+    if(client.verbose) {
+        console.log('handle_hello');
+    }
+
     game.boundary = data.boundary;
+    game.iteration = data.iteration;
     game.generate_boundary_gl_buffers();
 
     for(var i=0; i<data.asteroids.length; ++i) {
@@ -161,4 +167,26 @@ function handle_hello(data)
 
     game.in_game = true;
     window.requestAnimationFrame(game.render);
+}
+
+function handle_step(data)
+{
+    if(client.verbose) {
+        console.log('handle_step');
+    }
+
+    if(data.iteration < game.iteration) {
+        if(client.verbose) {
+            console.log('server iteration less than game');
+        }
+
+        return;
+    }
+
+    for(var i=0; i<data.ninjas.length; ++i) {
+        game.ninjas[data.ninjas[i].id].body.SetTransform(new Box2D.b2Vec2(data.ninjas[i].x, data.ninjas[i].y), 0);
+        game.ninjas[data.ninjas[i].id].body.SetLinearVelocity(new Box2D.b2Vec2(data.ninjas[i].px, data.ninjas[i].py));
+        console.log("moved a ninja");
+    }
+
 }

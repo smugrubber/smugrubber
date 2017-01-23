@@ -50,6 +50,13 @@ var game = {
     asteroids_created: 0,
     ninja_ais: [],
 
+    KEY_UP   : 1,
+    KEY_RIGHT: 2,
+    KEY_DOWN : 4,
+    KEY_LEFT : 8,
+    KEY_TOSS : 16,
+    KEY_MENU: 32,
+
     init: function() {
         // setup collision fun
         this.listener.BeginContact = function(contactPtr) {
@@ -427,6 +434,14 @@ var game = {
             gun_angle: 0.0,
             touching_ground: false,
             respawn_counter: 0,
+
+            input: {
+                update_iteration: 0,
+                mouse_down:       [0, 0, 0],
+                key_result:       0,
+                mouse_angle:      0,
+            },
+            
             animation: {
 
             },
@@ -477,6 +492,44 @@ var game = {
             },
 
             update: function() {
+                if(this.input.mouse_down[0] ) {
+                    this.shoot(this.input.mouse_angle);
+                }
+
+                if(this.input.mouse_down[2]) {
+                   this.fire_jetpack(); 
+                }
+                switch(this.input.key_result) {
+                    case game.KEY_UP:
+                        this.jump();
+                        break;
+                    case game.KEY_LEFT:
+                        this.move(-1);
+                        break;
+                    case game.KEY_RIGHT:
+                        this.move(1);
+                        break;
+                    case game.KEY_UP|game.KEY_LEFT:
+                        this.jump();
+                        this.move(-1);
+                        break;
+                    case game.KEY_UP|game.KEY_RIGHT:
+                        this.jump();
+                        this.move(1);
+                        break;
+                }
+                
+                if(this.input.key_result) {
+                    this.toss_counter++;
+                } else if(this.toss_counter > 0) {
+                    var toss_force = Math.min(this.toss_counter, 60) / 60.0;
+                    this.toss(toss_force, this.input.mouse_angle);
+                    this.toss_counter = 0;
+                }
+
+                this.input.key_result = 0;
+
+
                 if(! this.alive) {
                     if(this.respawn_counter > 0) {
                         this.respawn_counter--;
@@ -539,10 +592,10 @@ var game = {
                 angle += m_guns[this.gun.type].accuracy * noise.simplex2(game.iteration, 0);
 
                 if(isNaN(this.body.GetPosition().get_x())) {
-                    alert("cb x nan");
+                    console.log("cb x nan");
                 }
-                if(isNaN( angle)) {
-                    alert("cb angle nan");
+                if(isNaN(angle)) {
+                    console.log("cb angle nan");
                 }
 
                 game.create_bullet(
@@ -623,7 +676,7 @@ var game = {
                     return;
                 }
 
-                console.log("toss: " + f + " : " + angle);
+                //console.log("toss: " + f + " : " + angle);
                 var x = this.body.GetPosition().get_x();
                 var y = this.body.GetPosition().get_y();
                 var force = m_ninjas[this.ninja_type].toss.force_mult * f;
@@ -872,6 +925,17 @@ var game = {
             }
         }
 
+        for(var i in this.ninjas) {
+            var m = this.ninjas[i];
+            console.log(i + " :: x: " + m.body.GetPosition().get_x() + " y: " + m.body.GetPosition().get_y());
+            m.update();
+
+            if(! this.bounds_check(m.body)) {
+                m.alive = false;
+            }
+        }
+
+
         var lastManVictoryCheck = 0; 
         var stockVictoryCheck = 1;
         var guyCount = 0;
@@ -924,7 +988,6 @@ var game = {
 
         for(var i=0; i<this.ninja_ais.length; ++i) {
             this.ninja_ais[i].update();
-            //console.log(i + " :: x: " + this.ninja_ais[i].n.body.GetPosition().get_x() + " y: " + this.ninja_ais[i].n.body.GetPosition().get_y());
         }
     },
     victory: function(){

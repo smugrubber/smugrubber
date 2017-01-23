@@ -16,6 +16,9 @@ var RTCIceCandidate       = webrtc.RTCIceCandidate;
  *
  *********************************/
 var server = {
+    // list of all ws connections
+    // we can use this for broadcast
+    ws_con_list: [],
     // these maps are referenced by ws
     // which allows them to have unique identifier
     rtc_peer_conns: {},
@@ -38,6 +41,8 @@ var server = {
         // listen for websocket connections
         // we use this to be able to create a rtc connection
         server.wss.on('connection', function connection(ws) {
+            server.ws_con_list.push(ws);
+
             function receive_data_channel_message(ws, evt)
             {
                 if(config.verbose) {
@@ -126,7 +131,8 @@ var server = {
         }
 
         switch(data.type) {
-            case 'hello': handle_hello(ws); break;
+            case 'hello':   handle_hello(ws, data);   break;
+            case 'control': handle_control(ws, data); break;
             default:
                 server.send_data(ws, {'type': 'err', 'msg': 'type_not_found'});
                 break;
@@ -137,6 +143,34 @@ var server = {
     {
        server.data_channels[ws].send(JSON.stringify(data));
     },
+
+    broadcast: function(data)
+    {
+        for(var i=0; i<server.ws_con_list.length; ++i) {
+            var ws = server.ws_con_list[i];
+            server.data_channels[ws].send(JSON.stringify(data));
+        }
+    },
+
+    step: function()
+    {
+        var ninja_data = [];
+        for(var i in game.ninjas) {
+            ninja_data.push({
+                'id': game.ninjas[i].id,
+                'x':  game.ninjas[i].body.GetPosition().get_x(),
+                'y':  game.ninjas[i].body.GetPosition().get_y(),
+                'px': game.ninjas[i].body.GetLinearVelocity().get_x(),
+                'py': game.ninjas[i].body.GetLinearVelocity().get_y(),
+            });
+        }
+
+        server.broadcast({
+            "type":      "step",
+            "iteration": game.iteration,
+            "ninjas":    ninja_data
+        });
+    }
 };
 server.init();
 
@@ -148,7 +182,7 @@ server.init();
  *
  *********************************/
 
-function handle_hello(ws)
+function handle_hello(ws, data)
 {
     if(config.verbose) {
         console.log("handle_hello");
@@ -227,12 +261,30 @@ function handle_hello(ws)
     server.send_data(ws, {
         'type': 'hello',
         'boundary':    game.boundary,
+        'iteration':   game.iteration,
         'asteroids':   asteroid_data,
         'ninjas':      ninja_data,
         'ninja_id':    ninja_id,
         'crates':      crate_data,
         'spawnpoints': spawnpoint_data,
     });
+}
+
+function handle_control(ws, data)
+{
+    if(config.verbose) {
+        console.log("handle_control");
+    }
+
+    var ninja_id = server.users[ws];
+
+    // if this is older packet just ignore
+    if(data.iteration >= game.ninjas[ninja_id].input.update_iteration) {
+        game.ninjas[ninja_id].input.update_iteration = data.iteration;
+        game.ninjas[ninja_id].input.mouse_down       = data.mouse_down;
+        game.ninjas[ninja_id].input.key_result       = data.key_result;
+        game.ninjas[ninja_id].input.mouse_angle      = data.mouse_angle;
+    }
 }
 
 
@@ -244,5 +296,8 @@ function handle_hello(ws)
 game.init();
 setInterval(function() {
     game.step();
+}, 1000.0 / 60);
+setInterval(function() {
+    server.step();
 }, 1000.0 / 60);
 
