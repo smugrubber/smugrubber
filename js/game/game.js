@@ -1574,8 +1574,8 @@ var game = {
     },
 
     mousemove: function(e) {
-        var x = event.pageX;
-        var y = event.pageY;
+        var x = e.pageX;
+        var y = e.pageY;
         game.mousex = x;
         game.mousey = y;
         game.mouse_angle = Math.atan2((gameCvs.height / 2) - y, x - (gameCvs.width / 2));

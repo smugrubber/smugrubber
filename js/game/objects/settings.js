@@ -88,7 +88,7 @@ var settings = {
         // store connection data
         rtc_peer_connection_options: {
             'iceServers': [{
-                'url': 'stun:stun.l.google.com:19302'
+                'urls': 'stun:stun.l.google.com:19302'
             }]
         }
     },
