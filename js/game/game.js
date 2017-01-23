@@ -9,9 +9,12 @@ Array.prototype.remove = function(from, to) {
 };
 
 var gameCvs    = document.getElementById("gameCvs");
-gameCvs.width  = document.documentElement.clientWidth;
-gameCvs.height = document.documentElement.clientHeight;
+gameCvs.width  = window.innerWidth;
+gameCvs.height = window.innerHeight;
 
+
+var play_screen_offset_x = 0;
+var play_screen_offset_y = 0;
 
 var gl = initGL();
 
@@ -23,11 +26,23 @@ var gl = initGL();
     }
 })();
 
+function center_screen()
+{
+    gl.viewportWidth = window.innerWidth;
+    gl.viewportHeight = window.innerHeight;
+
+    play_screen_offset_x = ((gl.viewportWidth > gl.viewportHeight) ? ((gl.viewportWidth  - gl.viewportHeight) / 2) : 0);
+    play_screen_offset_y = ((gl.viewportHeight > gl.viewportWidth) ? ((gl.viewportHeight  - gl.viewportWidth) / 2) : 0);
+
+    $('#gameCvs').css('margin-left', play_screen_offset_x);
+    $('#gameCvs').css('margin-top', play_screen_offset_y);
+
+    gameCvs.width  = window.innerWidth - (play_screen_offset_x*2);
+    gameCvs.height = window.innerHeight - (play_screen_offset_y*2);
+}
+
 window.onresize = function() {
-    gameCvs.width  = document.documentElement.clientWidth;
-    gameCvs.height = document.documentElement.clientHeight;
-    gl.viewportWidth = gameCvs.width;
-    gl.viewportHeight = gameCvs.height;
+    center_screen();
 };
 
 var meter = new FPSMeter();
@@ -50,8 +65,7 @@ function initGL()
     var gl;
     try {
         gl = gameCvs.getContext("webgl");
-        gl.viewportWidth = gameCvs.width;
-        gl.viewportHeight = gameCvs.height;
+        center_screen();
     } catch (e) {
         console.log(e);
     }
@@ -182,7 +196,6 @@ var game = {
             var impact_force = Math.abs(vdx) + Math.abs(vdy);
 
             if(tA == 'ninja' && tB == 'ninja') {
-                return; 
                 var ninjaA = game.ninjas[udA];
                 var ninjaB = game.ninjas[udB];
 
@@ -1241,6 +1254,7 @@ var game = {
         var that = this;
 
         game.crates[id] = {
+            id: id,
             body: body,
             type: crate.type,
             alive: true,
@@ -1456,24 +1470,25 @@ var game = {
     
 
     render: function() {
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        var min_viewport = Math.min(gl.viewportWidth, gl.viewportHeight);
+        gl.viewport(0, 0, min_viewport, min_viewport);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.01, 50.0, game.perspective_matrix);
+        mat4.perspective(45, 1.0, 0.01, 100.0, game.perspective_matrix);
 
         mat4.identity(game.model_view_matrix);
 
         mat4.translate(game.model_view_matrix, [
-            (game.game_offset.x + (gameCvs.width  / 2) - game.mousex) * 0.04,
-            (game.game_offset.y + (gameCvs.height / 2) + game.mousey) * 0.04,
-            -50
+            (game.game_offset.x + (min_viewport / 2) - Math.max(0, Math.min(game.mousex - play_screen_offset_x, min_viewport))) * 0.06,
+            (game.game_offset.y + (min_viewport / 2) + Math.max(0, Math.min(game.mousey - play_screen_offset_y, min_viewport))) * 0.04,
+            -90
         ]);
 
         if(game.camninja != null) {
             var pos = game.camninja.body.GetPosition();
             mat4.translate(game.model_view_matrix, [
                 -pos.get_x(),
-                -pos.get_y() - (gameCvs.height * 0.04),
+                -pos.get_y() - (window.innerHeight * 0.04),
                 0.0
             ]);
         }
@@ -1593,7 +1608,7 @@ var game = {
         var y = e.pageY;
         game.mousex = x;
         game.mousey = y;
-        game.mouse_angle = Math.atan2((gameCvs.height / 2) - y, x - (gameCvs.width / 2));
+        game.mouse_angle = Math.atan2((window.innerHeight / 2) - y, x - (window.innerWidth / 2));
     },
 
     keydown: function(e) {

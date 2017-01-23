@@ -419,7 +419,7 @@ var game = {
             }
         };
 
-        game.send_buffer.push({"type": "bullet", "id": id});
+        game.send_buffer.push({"type": "bullet_created", "id": id});
     },
 
     create_ninja: function() {
@@ -672,6 +672,8 @@ var game = {
                 }
 
                 crate.alive = false;
+                game.send_buffer.push({"type": "crate_picked_up", "id": this.id});
+                console.log("pickup_crate: " + this.id);
             },
 
             toss: function(f, angle) {
@@ -887,9 +889,9 @@ var game = {
         var that = this;
 
         game.crates[id] = {
-            id: id,
-            body: body,
-            type: crate_type,
+            id:    id,
+            body:  body,
+            type:  crate_type,
             alive: true,
 
             update: function() {

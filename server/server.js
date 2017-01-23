@@ -186,7 +186,7 @@ var server = {
 
         var new_bullet_data = [];
         for(var i=0; i<game.send_buffer.length; ++i) {
-            if(game.send_buffer[i].type == "bullet") {
+            if(game.send_buffer[i].type == "bullet_created") {
                 var m = game.bullets[game.send_buffer[i].id];
 
                 new_bullet_data.push({
@@ -200,6 +200,16 @@ var server = {
             }
         }
 
+        var picked_up_crate_data = [];
+        for(var i=0; i<game.send_buffer.length; ++i) {
+            if(game.send_buffer[i].type == "crate_picked_up") {
+                picked_up_crate_data.push({
+                    "id": game.send_buffer[i].id,
+                });
+                console.log("sending: " + game.send_buffer[i].id);
+            }
+        }
+
 
         game.send_buffer = [];
         server.broadcast({
@@ -209,6 +219,7 @@ var server = {
             "crates":      crate_data,
             "new_ninjas":  new_ninja_data,
             "new_bullets": new_bullet_data,
+            "picked_up_crates": picked_up_crate_data,
         });
     }
 };

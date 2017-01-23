@@ -216,8 +216,14 @@ function handle_step(data)
         game.create_ninja_from_server(data.new_ninjas[i]);
     }
     for(var i=0; i<data.new_bullets.length; ++i) {
-        console.log('create_bullet');
         game.create_bullet_from_server(data.new_bullets[i]);
+    }
+    for(var i=0; i<data.picked_up_crates.length; ++i) {
+        console.log('picked_up_crate');
+        var crate = game.crates[data.picked_up_crates[i].id];
+        if(typeof crate !== 'undefined') {
+            crate.alive = false;
+        }
     }
 }
 
