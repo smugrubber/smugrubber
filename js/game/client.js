@@ -2,6 +2,7 @@ var client = {
     rtc_peer_conn: null,
     data_channel: null,
     socket: null,
+    verbose: false,
 
     log_error: function(e) {
         console.log(e);
@@ -21,13 +22,10 @@ var client = {
 
 
     receive_data_channel_message: function(evt) {        
-        console.log('receive_data_channel_message: ' + evt.data);
+        if(client.verbose) {
+            console.log('receive_data_channel_message: ' + evt.data);
+        }
         client.parse_client_message(evt.data);
-    },
-
-    parse_client_message: function(msg) {
-        console.log('parse_client_message');
-        console.log(msg);
     },
 
     init: function() {
@@ -37,7 +35,9 @@ var client = {
             client.rtc_peer_conn = new RTCPeerConnection(settings.server.rtc_peer_connection_options, null);
             client.data_channel  = client.rtc_peer_conn.createDataChannel('textMessages', settings.server.data_channel_options);
             client.data_channel.onopen = function() {
-                console.log('data_channel_state_changed');
+                if(client.verbose) {
+                    console.log('data_channel_state_changed');
+                }
 
                 if(client.data_channel.readyState === 'open') {
                     client.data_channel.onmessage = client.receive_data_channel_message;
@@ -45,7 +45,9 @@ var client = {
             };
 
             client.rtc_peer_conn.ondatachannel = function(evt) {
-                console.log('receive_data_channel');
+                if(client.verbose) {
+                    console.log('receive_data_channel');
+                }
 
                 client.data_channel = evt.channel;
                 client.data_channel.onmessage = client.receive_data_channel_message;
@@ -73,7 +75,9 @@ var client = {
 
         client.socket.onmessage = function(evt) {
             var data = JSON.parse(evt.data);
-            console.log(data);
+            if(client.verbose) {
+                console.log(data);
+            }
 
             if(data.emit == "signal") {
                 if(data.type == "SDP") {
@@ -95,8 +99,66 @@ var client = {
 
     send: function(data) {
         client.data_channel.send(JSON.stringify(data));
-    }
-};
+    },
 
+    parse_client_message: function(msg) {
+        if(client.verbose) {
+            console.log('parse_client_message');
+            console.log(msg);
+        }
+
+        try {
+            var data = JSON.parse(msg);
+        } catch(e) {
+            console.log('err :: bad_json');
+            return;
+        }
+
+        if(typeof data.type === 'undefined') {
+            console.log('err :: type_not_defined');
+            return;
+        }
+
+        switch(data.type) {
+            case 'hello': handle_hello(data); break;
+            default:
+                console.log('err :: type_not_found');
+                break;
+        }
+    },
+};
 client.init();
 
+function handle_hello(data)
+{
+    game.boundary = data.boundary;
+    game.generate_boundary_gl_buffers();
+
+    for(var i=0; i<data.asteroids.length; ++i) {
+        game.create_asteroid_from_server(data.asteroids[i]);
+        console.log("added an asteroid");
+    }
+
+    for(var i=0; i<data.ninjas.length; ++i) {
+        game.create_ninja_from_server(data.ninjas[i]);
+        console.log("added a ninja");
+    }
+    for(var i=0; i<data.crates.length; ++i) {
+        game.create_crate_from_server(data.crates[i]);
+        console.log("added a crate");
+    }
+    for(var i=0; i<data.spawnpoints.length; ++i) {
+        game.create_spawnpoint_from_server(data.spawnpoints[i]);
+        console.log("added a spawnpoint");
+    }
+
+    game.generate_boundary_gl_buffers();
+    game.generate_asteroid_gl_buffers();
+
+
+    game.ninja = game.ninja_human_controller(game.ninjas[data.ninja_id]);
+    game.camninja = game.ninjas[data.ninja_id];
+
+    game.in_game = true;
+    window.requestAnimationFrame(game.render);
+}

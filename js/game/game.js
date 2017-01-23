@@ -69,6 +69,7 @@ var game = {
     world: new Box2D.b2World(new Box2D.b2Vec2(0, -25), false),
     game_offset: { x: 0, y: 0 }, /* translation of game world render */
     listener: new Box2D.JSContactListener(),
+    in_game: false,
     user_data: {},
     sprites: {},
     asteroids: {},
@@ -89,7 +90,6 @@ var game = {
     mouseDown: [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ninja: null,
     camninja: null,
-    ninja_ais: [],
     mouseangle: 0.0,
     mousex: 0,
     mousey: 0,
@@ -236,10 +236,10 @@ var game = {
                 var crate = game.crates[crate_ud];
                 var ninja = game.ninjas[ninja_ud];
 
-                var f = impactForce * crate.body.GetMass() * m_crates[crate.crate_type].damage;
+                var f = impactForce * crate.body.GetMass() * m_crates[crate.type].damage;
                 var d = ninja.damage;
 
-                if(f > m_crates[crate.crate_type].min_dforce) {
+                if(f > m_crates[crate.type].min_dforce) {
                     ninja.damage += Math.min(settings.collide.ninja_to_crate_max_d, f * settings.collide.ninja_to_crate_mult)
                     var impulse = f * (d + 1.0) * settings.collide.ninja_to_crate_mult_f;
 
@@ -303,6 +303,9 @@ var game = {
             var tA = game.user_data[udA].type;
             var tB = game.user_data[udB].type;
 
+            var tA = game.user_data[udA].type;
+            var tB = game.user_data[udB].type;
+
             if((tA == 'bullet'   && tB == 'bullet')
             || (tA == 'asteroid' && tB == 'asteroid')
             || (tA == 'crate'    && tB == 'crate')
@@ -349,53 +352,9 @@ var game = {
         this.sprites.ninja.src = '/img/sprites/ninjas/KnightSprite.png';
 
 
-        var bounds = { left: 0, right: 0, top: 0, bottom: 0 };
-
-        for(var i=0; i<settings.map.asteroids; i++) {
-            var x = settings.map.place_x_offset + (i*settings.map.place_x_mult) + (Math.random() * settings.map.place_x_rand);
-            var y = settings.map.place_y_offset + (i*settings.map.place_y_mult) + (Math.random() * settings.map.place_y_rand);
-
-            if (x < bounds.left)   { bounds.left   = x; }
-            if (x > bounds.right)  { bounds.right  = x; }
-            if (y > bounds.top)    { bounds.top    = y; }
-            if (y < bounds.bottom) { bounds.bottom = y; }
-
-            this.create_asteroid(x, y);
-        }
-
-        for(var i in game.asteroids) {
-            var sp_x = game.asteroids[i].body.GetPosition().get_x();
-            var sp_y = game.asteroids[i].body.GetPosition().get_y() + 15;
-
-            game.attempt_to_add_spawn_point(sp_x, sp_y);
-        }
-
-        for(var i in game.spawnpoints) {
-            var s = game.spawnpoints[i];
-            this.create_crate(s.x, s.y, 0, 0, Math.random() < 0.5 ? 0 : 1);
-        }
-
-        game.boundary = {
-            left:   bounds.left   - settings.boundary.left,
-            right:  bounds.right  + settings.boundary.right,
-            bottom: bounds.bottom - settings.boundary.bottom,
-            top:    bounds.top    + settings.boundary.top,
-        };
         
-        // load bots
-        for(var i=0; i<settings.bots.amount; ++i) {
-            var id = game.create_ninja();
-            var s = game.random_spawn_point();
-            game.ninjas[id].spawn(s.x, s.y);
-            game.ninja_ais.push(game.ninja_ai_controller(game.ninjas[id]));
-            game.camninja = game.ninjas[id];
-        }
-
-
         // setup graphics system
         game.init_shaders();
-        game.generate_asteroid_gl_buffers();
-        game.generate_boundary_gl_buffers();
         game.generate_crates_gl_buffers();
         game.generate_guns_gl_buffers();
         game.generate_particles_gl_buffers();
@@ -817,43 +776,21 @@ var game = {
         return id;
     },
 
-    attempt_to_add_spawn_point: function(x, y) {
-        var r = settings.spawnpoint.radius;
-
-        var cool = true;
-
-        for(var j in game.asteroids) {
-            var aj = game.asteroids[j];
-
-            var jx = aj.body.GetPosition().get_x();
-            var jy = aj.body.GetPosition().get_y();;
-
-            if(jx + aj.width > x - r && jx - aj.width < x + r && jy + aj.height > y - r && jy - aj.height < y + r) {
-                cool = false;
-                break;
-            }
-        }
-
-        if(cool) {
-            this.create_spawnpoint(x, y);
-        }
-    },
-
-    random_spawn_point: function() {
-        var keys = Object.keys(game.spawnpoints)
-        return game.spawnpoints[keys[ keys.length * Math.random() << 0]];
+    add_user_data_from_server: function(id, data) {
+        game.user_data[id] = data;
+        return id;
     },
 
     body_distance(a, b) {
         return dist(a.GetPosition().get_x(), a.GetPosition().get_y(), b.GetPosition().get_x(), b.GetPosition().get_y());
     },
 
-    create_spawnpoint: function(x, y) {
-        var id = game.add_user_data({ type: 'spawnpoint' });
+    create_spawnpoint_from_server: function(spawnpoint) {
+        var id = game.add_user_data_from_server(spawnpoint.id, { type: 'spawnpoint' });
 
         game.spawnpoints[id] = {
-            x: x,
-            y: y
+            x:  spawnpoint.x,
+            y:  spawnpoint.y
         };
         
         return id;
@@ -927,16 +864,42 @@ var game = {
         };
     },
 
-    create_ninja: function() {
-        var id = game.add_user_data({ type: 'ninja' });
-        var ninja_type = 0;
+    create_ninja_from_server: function(ninja) {
+        var id = game.add_user_data_from_server(ninja.id, { type: 'ninja' });
+        var x = ninja.x;
+        var y = ninja.y;
+        var ninja_type = ninja.ninja_type;
+
+        var bd = new Box2D.b2BodyDef();
+        bd.set_type(Box2D.b2_dynamicBody);
+        bd.set_position(new Box2D.b2Vec2(x, y));
+        bd.set_fixedRotation(true);
+        bd.set_bullet(true);
+
+        var circleShape = new Box2D.b2CircleShape();
+        circleShape.set_m_radius(m_ninjas[ninja_type].body.radius);
+
+        var filter = new Box2D.b2Filter();
+        filter.set_categoryBits(game.entity_category.ninja);
+        filter.set_maskBits(game.entity_category.bullet | game.entity_category.ninja | game.entity_category.asteroid | game.entity_category.crate);
+
+        var fd = new Box2D.b2FixtureDef();
+        fd.set_shape(circleShape);
+        fd.set_density(m_ninjas[ninja_type].body.density);
+        fd.set_friction(m_ninjas[ninja_type].body.friction);
+        fd.set_restitution(m_ninjas[ninja_type].body.restitution);
+        fd.set_userData(id);
+        fd.set_filter(filter);
+
+        var body = game.world.CreateBody(bd);
+        body.CreateFixture(fd);
 
         game.ninjas[id] = {
-            body: null,
-            alive: true,
-            ninja_type: ninja_type,
-            stock: m_ninjas[ninja_type].stock,
-            deaths: 0,
+            body: body,
+            alive: ninja.alive,
+            ninja_type: ninja.ninja_type,
+            stock: ninja.stock,
+            deaths: ninja.deaths,
             facing_dir: -1,
             gun_angle: 0.0,
             touching_ground: false,
@@ -944,7 +907,17 @@ var game = {
             animation: {
 
             },
-            name: ((Math.random() < 0.5) ? "Dan" : "Jett"),
+            name: ninja.name,
+            gun: {
+                type:         ninja.gun.type,
+                ammo:         ninja.gun.ammo,
+                fireinterval: m_guns[ninja.gun.type].fireinterval,
+                src:          m_guns[ninja.gun.type].src,
+                reloadtime:   0
+            },
+            jetpack: {
+                ammo: ninja.jetpack.ammo
+            },
 
             spawn: function(x, y) {
                 var bd = new Box2D.b2BodyDef();
@@ -978,6 +951,8 @@ var game = {
                 this.damage = 0;
 
                 var gun_type = Math.floor(Math.random() * m_guns.length);
+
+                var gun_type = Math.floor(Math.random() * m_guns.length);
                 this.gun = {
                     type: gun_type,
                     ammo:         m_guns[gun_type].ammo,
@@ -993,28 +968,6 @@ var game = {
 
             render: function() {
                 var pos = this.body.GetPosition();
-
-                // draw gun
-                /*game.pushMatrix();
-                    mat4.translate(game.model_view_matrix, [
-                        pos.get_x(),
-                        pos.get_y(),
-                        0.0
-                    ]);
-                    mat4.scale(game.model_view_matrix, [1, this.facing_dir, 1]);
-                    mat4.rotate(game.model_view_matrix, this.gun_angle * this.facing_dir, [0, 0, 1]);
-
-                    gl.bindBuffer(gl.ARRAY_BUFFER, m_ninjas[this.ninja_type].pos_buffer);
-                    gl.vertexAttribPointer(game.color_shader_program.vertex_position_attribute, m_ninjas[this.ninja_type].pos_buffer.item_size, gl.FLOAT, false, 0, 0);
-
-                    gl.bindBuffer(gl.ARRAY_BUFFER, m_ninjas[this.ninja_type].col_buffer);
-                    gl.vertexAttribPointer(game.color_shader_program.vertex_color_attribute, m_ninjas[this.ninja_type].col_buffer.item_size, gl.FLOAT, false, 0, 0);
-                    
-                    gl.uniformMatrix4fv(game.color_shader_program.perspective_matrix_uniform, false, game.perspective_matrix);
-                    gl.uniformMatrix4fv(game.color_shader_program.model_view_matrix_uniform, false, game.model_view_matrix);
-
-                    gl.drawArrays(gl.TRIANGLES, 0, m_ninjas[this.ninja_type].pos_buffer.num_items);
-                game.popMatrix();*/
 
                 // draw ninja
                 game.pushMatrix();
@@ -1053,9 +1006,6 @@ var game = {
                             if(settings.victoryCondition.stock && this.stock < 1){
                                 console.log("Figure out how to delete the character");
                                 this.respawn_counter = 10000;
-                            }else{
-                                var s = game.random_spawn_point();
-                                this.spawn(s.x, s.y); 
                             }
                         }
                     }
@@ -1186,10 +1136,10 @@ var game = {
                 }
 
                 // health pack
-                if(crate.crate_type == 0) {
+                if(crate.type == 0) {
                     this.damage = Math.max(0, this.damage - settings.crates.health_restore);
                 }
-                if(crate.crate_type == 1) {
+                if(crate.type == 1) {
                     this.jetpack.ammo += settings.crates.jet_fuel;
                 }
 
@@ -1291,64 +1241,18 @@ var game = {
         };
     },
 
-    ninja_ai_controller: function(ninja) {
-        return {
-            n: ninja,
-            home: {
-                x: ninja.body.GetPosition().get_x(),
-                y: ninja.body.GetPosition().get_y()
-            },
-            target: null,
-            update: function() {
-                if(this.target == null ||
-                    (
-                        settings.bots.target == "random" && (
-                            !  this.target.alive
-                            ||  Math.random() < 1.0 / (settings.bots.target_switch_nsec * 60)
-                            || game.body_distance(this.n.body, this.target.body) > settings.bots.max_follow_d
-                        )
-                    )
-                ) {
-                    var tries = 0;
-                    do {
-                        var keys = Object.keys(game.ninjas)
-                        this.target = game.ninjas[keys[ keys.length * Math.random() << 0]];
-                    } while(! this.target.alive && tries < 5);
-                }
-
-                if(settings.bots.target == "you" && game.ninja != null) {
-                    this.target = game.ninja.n;
-                }
-
-                this.n.facing_dir = this.n.body.GetPosition().get_x() <  ((this.home.x + this.target.body.GetPosition().get_x()) / 2) ? 1 : -1;
-                this.n.move(this.n.facing_dir);
-                var y_cmp = ((this.home.y + this.target.body.GetPosition().get_y()) / 2) - 10;
-                if(this.n.body.GetPosition().get_y() < y_cmp) {
-                    this.n.fire_jetpack();
-                }
-
-                if(Math.random() < 1.0 / (settings.bots.jump_nsec * 60)) {
-                    this.n.jump();
-                }
-
-                var angle = Math.atan2(
-                    this.target.body.GetPosition().get_y() -this.n.body.GetPosition().get_y(),
-                    this.target.body.GetPosition().get_x() -this.n.body.GetPosition().get_x()
-                );
-
-                this.n.shoot(angle);
-            }
-        };
-    },
-
-    create_asteroid: function(x, y) {
-        var id = game.add_user_data({ type: 'asteroid' });
+    create_asteroid_from_server(asteroid)
+    {
         this.asteroids_created++;
-        var size = 3.5 + (Math.random() * 2.5);
-        var edges = 15 + (Math.floor(Math.random()*10));
-        var xtoy = 0.25 + (Math.random() * 1.5);
-        var ytox = 0.25 + (Math.random() * 1.5);
-        var width = 0;
+
+        var id     = game.add_user_data_from_server(asteroid.id, { type: 'asteroid' });
+        var x      = asteroid.x;
+        var y      = asteroid.y;
+        var size   = asteroid.size;
+        var edges  = asteroid.edges;
+        var xtoy   = asteroid.xtoy;
+        var ytox   = asteroid.ytox;
+        var width  = 0;
         var height = 0;
 
         var verts = [];
@@ -1439,14 +1343,18 @@ var game = {
         return id;
     },
 
-    create_crate: function(x, y, px, py, crate_type) {
-        var id = game.add_user_data({ type: 'crate', crate_type: crate_type });
-        var width  = m_crates[crate_type].width;
-        var height = m_crates[crate_type].height;
+    create_crate_from_server: function(crate) {
+        var id = game.add_user_data_from_server(crate.id, { type: 'crate', crate_type: crate.type });
+
+        var px = crate.px;
+        var py = crate.py;
+
+        var width  = m_crates[crate.type].width;
+        var height = m_crates[crate.type].height;
 
         var bd = new Box2D.b2BodyDef();
         bd.set_type(Box2D.b2_dynamicBody);
-        bd.set_position( new Box2D.b2Vec2(x, y) );
+        bd.set_position( new Box2D.b2Vec2(crate.x, crate.y) );
 
         var shape = new Box2D.b2PolygonShape();
         shape.SetAsBox(width, height);
@@ -1457,21 +1365,22 @@ var game = {
 
         var fd = new Box2D.b2FixtureDef();
         fd.set_shape(shape);
-        fd.set_density(m_crates[crate_type].density);
-        fd.set_friction(m_crates[crate_type].friction);
-        fd.set_restitution(m_crates[crate_type].restitution);
+        fd.set_density(m_crates[crate.type].density);
+        fd.set_friction(m_crates[crate.type].friction);
+        fd.set_restitution(m_crates[crate.type].restitution);
         fd.set_userData(id);
         fd.set_filter(filter);
 
         var body = this.world.CreateBody(bd);
         body.CreateFixture(fd);
-        body.SetLinearVelocity(new Box2D.b2Vec2(px, py));
+        body.SetLinearVelocity(new Box2D.b2Vec2(crate.px, crate.py));
+        body.SetTransform(body.GetPosition(), crate.angle);
 
         var that = this;
 
         game.crates[id] = {
             body: body,
-            crate_type: crate_type,
+            type: crate.type,
             alive: true,
 
             render: function() {
@@ -1485,16 +1394,16 @@ var game = {
                     ]);
                     mat4.rotate(game.model_view_matrix, rot, [0, 0, 1]);
 
-                    gl.bindBuffer(gl.ARRAY_BUFFER, m_crates[this.crate_type].pos_buffer);
-                    gl.vertexAttribPointer(game.color_shader_program.vertex_position_attribute, m_crates[this.crate_type].pos_buffer.item_size, gl.FLOAT, false, 0, 0);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, m_crates[this.type].pos_buffer);
+                    gl.vertexAttribPointer(game.color_shader_program.vertex_position_attribute, m_crates[this.type].pos_buffer.item_size, gl.FLOAT, false, 0, 0);
 
-                    gl.bindBuffer(gl.ARRAY_BUFFER, m_crates[this.crate_type].col_buffer);
-                    gl.vertexAttribPointer(game.color_shader_program.vertex_color_attribute, m_crates[this.crate_type].col_buffer.item_size, gl.FLOAT, false, 0, 0);
+                    gl.bindBuffer(gl.ARRAY_BUFFER, m_crates[this.type].col_buffer);
+                    gl.vertexAttribPointer(game.color_shader_program.vertex_color_attribute, m_crates[this.type].col_buffer.item_size, gl.FLOAT, false, 0, 0);
                     
                     gl.uniformMatrix4fv(game.color_shader_program.perspective_matrix_uniform, false, game.perspective_matrix);
                     gl.uniformMatrix4fv(game.color_shader_program.model_view_matrix_uniform, false, game.model_view_matrix);
 
-                    gl.drawArrays(gl.TRIANGLES, 0, m_crates[this.crate_type].pos_buffer.num_items);
+                    gl.drawArrays(gl.TRIANGLES, 0, m_crates[this.type].pos_buffer.num_items);
                 game.popMatrix();
             },
 
@@ -1588,10 +1497,15 @@ var game = {
             var m = this.ninjas[i];
             m.update();
 
-            // I was trying to get this damage watcher integrated into bounds_check, but I couldnt figure out how to use the object properly
-            if((! this.bounds_check(m.body)) || (m.damage >= m_ninjas[m.ninja_type].max_damage)) m.alive = false;
-            
-
+            if(m.alive) {
+                if(! this.bounds_check(m.body)) {
+                    m.alive = false;
+                }
+                
+                if(m.damage >= m_ninjas[m.ninja_type].max_damage) {
+                    m.alive = false;
+                }
+            }
             
             if(! m.alive && m.respawn_counter == 0) {
                 var delayMod = 1;
@@ -1637,10 +1551,6 @@ var game = {
 
         if(this.ninja != null) {
             this.ninja.update();
-        }
-
-        for(var i=0; i<this.ninja_ais.length; ++i) {
-            this.ninja_ais[i].update();
         }
     },
     victory: function(){
@@ -1715,6 +1625,8 @@ var game = {
 
         gl.useProgram(game.color_shader_program);
         game.render_asteroids();
+
+
         game.render_boundary();
 
         gl.enable(gl.BLEND);
@@ -1848,13 +1760,9 @@ var game = {
     },
 
     main_menu_click: function() {
-        if(game.ninja == null) {
-            var id = game.create_ninja();
-            var s = game.random_spawn_point();
-            game.ninjas[id].spawn(s.x, s.y);
-            game.ninja = game.ninja_human_controller(game.ninjas[id]);
-            game.camninja = game.ninjas[id];
-            themeSong.stop();
+        if(! game.in_game) {
+            client.send({"type": "hello"});
+            // themeSong.stop();
         }
         
         $('#overlay').fadeOut(100);
@@ -1874,8 +1782,7 @@ setInterval(function() {
     game.step();
 }, 1000.0 / 60);
 
-window.requestAnimationFrame(game.render);
-var themeSong=new Sound("/audioAssets/OST/smugrubberTheme.mp3",100,true);
+// var themeSong=new Sound("/audioAssets/OST/smugrubberTheme.mp3",100,true);
 //themeSong.start();
 
 function Sound(source,volume,loop)

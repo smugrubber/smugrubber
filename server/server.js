@@ -4,28 +4,25 @@
 const config    = require('./config');
 const webrtc    = require('wrtc');
 const WebSocket = require('ws');
+const game      = require('./game');
 
 var RTCPeerConnection     = webrtc.RTCPeerConnection;
 var RTCSessionDescription = webrtc.RTCSessionDescription;
 var RTCIceCandidate       = webrtc.RTCIceCandidate;
 
+/**********************************
+ *
+ * INITIALIZE SERVER
+ *
+ *********************************/
 var server = {
     // these maps are referenced by ws
     // which allows them to have unique identifier
     rtc_peer_conns: {},
     data_channels:  {},
+    users: {}, // contains ninja_id
 
     wss: null,
-
-    parse_client_message: function(ws, msg)
-    {
-       server.data_channels[ws].send(JSON.stringify({'test': 'weeeee'}));
-    },
-
-    send_data: function(ws, data)
-    {
-       server.data_channels[ws].send(JSON.stringify(data));
-    },
 
     // convenience function for ws
     log_error: function(e)
@@ -113,7 +110,139 @@ var server = {
             });
         });
     },
-};
 
+    parse_client_message: function(ws, msg)
+    {
+        try {
+            var data = JSON.parse(msg);
+        } catch(e) {
+            server.data_channels[ws].send(JSON.stringify({'type': 'err', 'msg': 'bad_json'}));
+            return;
+        }
+
+        if(typeof data.type === 'undefined') {
+            server.data_channels[ws].send(JSON.stringify({'type': 'err', 'msg': 'type_not_defined'}));
+            return;
+        }
+
+        switch(data.type) {
+            case 'hello': handle_hello(ws); break;
+            default:
+                server.send_data(ws, {'type': 'err', 'msg': 'type_not_found'});
+                break;
+        }
+    },
+
+    send_data: function(ws, data)
+    {
+       server.data_channels[ws].send(JSON.stringify(data));
+    },
+};
 server.init();
+
+
+
+/**********************************
+ *
+ * SERVER LISTENERS
+ *
+ *********************************/
+
+function handle_hello(ws)
+{
+    if(config.verbose) {
+        console.log("handle_hello");
+    }
+
+    if(typeof server.users[ws] !== 'undefined') {
+        server.send_data(ws, {'type': 'err', 'msg': 'already_hellod'});
+
+        if(config.verbose) {
+            console.log('user already hellod');
+        }
+    }
+
+    var ninja_id = game.create_ninja();
+    var s = game.random_spawn_point();
+    game.ninjas[ninja_id].spawn(s.x, s.y);
+    server.users[ws] = ninja_id;
+
+
+    var asteroid_data = [];
+    for(var i in game.asteroids) {
+        asteroid_data.push({
+            'id':     game.asteroids[i].id,
+            'x':      game.asteroids[i].body.GetPosition().get_x(),
+            'y':      game.asteroids[i].body.GetPosition().get_y(),
+            'size':   game.asteroids[i].size,
+            'edges':  game.asteroids[i].edges,
+            'xtoy':   game.asteroids[i].xtoy,
+            'ytox':   game.asteroids[i].ytox,
+        });
+    }
+
+    var ninja_data = [];
+    for(var i in game.ninjas) {
+        ninja_data.push({
+            'id':         game.ninjas[i].id,
+            'x':          game.ninjas[i].body.GetPosition().get_x(),
+            'y':          game.ninjas[i].body.GetPosition().get_y(),
+            'alive':      game.ninjas[i].alive,
+            'ninja_type': game.ninjas[i].ninja_type,
+            'stock':      game.ninjas[i].stock,
+            'deaths':     game.ninjas[i].deaths,
+            'name':       game.ninjas[i].name,
+            'gun': {
+                'type': game.ninjas[i].gun.type,
+                'ammo': game.ninjas[i].gun.ammo,
+            },
+            'jetpack': {
+                'ammo': game.ninjas[i].jetpack.ammo
+            }
+        });
+    }
+
+    var crate_data = [];
+    for(var i in game.crates) {
+        crate_data.push({
+            'id':         game.crates[i].id,
+            'type':       game.crates[i].type,
+            'x':          game.crates[i].body.GetPosition().get_x(),
+            'y':          game.crates[i].body.GetPosition().get_y(),
+            'px':         game.crates[i].body.GetLinearVelocity().get_x(),
+            'py':         game.crates[i].body.GetLinearVelocity().get_y(),
+            'angle':      game.crates[i].body.GetAngle(),
+        });
+    }
+
+    var spawnpoint_data = [];
+    for(var i in game.spawnpoints) {
+        spawnpoint_data.push({
+            'id': game.spawnpoints[i].id,
+            'x':  game.spawnpoints[i].x,
+            'y':  game.spawnpoints[i].y,
+        });
+    }
+
+    server.send_data(ws, {
+        'type': 'hello',
+        'boundary':    game.boundary,
+        'asteroids':   asteroid_data,
+        'ninjas':      ninja_data,
+        'ninja_id':    ninja_id,
+        'crates':      crate_data,
+        'spawnpoints': spawnpoint_data,
+    });
+}
+
+
+/**********************************
+ *
+ * INITIALIZE GAME
+ *
+ *********************************/
+game.init();
+setInterval(function() {
+    game.step();
+}, 1000.0 / 60);
 

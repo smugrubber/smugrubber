@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-const Box2D    = require('../js/libs/box2d.js');
-const noise    = require('../js/libs/perlin.js');
-const settings = require('../js/game/objects/settings.js');
-const m_crates = require('../js/game/objects/crates.js');
-const m_guns   = require('../js/game/objects/guns.js');
-const m_ninjas = require('../js/game/objects/ninjas.js');
+const Box2D    = require('../js/libs/box2d');
+const noise    = require('../js/libs/perlin');
+const settings = require('../js/game/objects/settings');
+const m_crates = require('../js/game/objects/crates');
+const m_guns   = require('../js/game/objects/guns');
+const m_ninjas = require('../js/game/objects/ninjas');
 
 
 var rng_seed = "" + 1000; //Math.floor(Math.random() * 1000000);
@@ -165,10 +165,10 @@ var game = {
                 var crate = game.crates[crate_ud];
                 var ninja = game.ninjas[ninja_ud];
 
-                var f = impactForce * crate.body.GetMass() * m_crates[crate.crate_type].damage;
+                var f = impactForce * crate.body.GetMass() * m_crates[crate.type].damage;
                 var d = ninja.damage;
 
-                if(f > m_crates[crate.crate_type].min_dforce) {
+                if(f > m_crates[crate.type].min_dforce) {
                     ninja.damage += Math.min(settings.collide.ninja_to_crate_max_d, f * settings.collide.ninja_to_crate_mult)
                     var impulse = f * (d + 1.0) * settings.collide.ninja_to_crate_mult_f;
 
@@ -309,11 +309,11 @@ var game = {
         
         // load bots
         for(var i=0; i<settings.bots.amount; ++i) {
+            /*
             var id = game.create_ninja();
             var s = game.random_spawn_point();
             game.ninjas[id].spawn(s.x, s.y);
-            game.ninja_ais.push(game.ninja_ai_controller(game.ninjas[id]));
-            game.camninja = game.ninjas[id];
+            game.ninja_ais.push(game.ninja_ai_controller(game.ninjas[id]));*/
         }
     },
 
@@ -358,8 +358,9 @@ var game = {
         var id = game.add_user_data({ type: 'spawnpoint' });
 
         game.spawnpoints[id] = {
-            x: x,
-            y: y
+            id: id,
+            x:  x,
+            y:  y
         };
         
         return id;
@@ -416,6 +417,7 @@ var game = {
         var ninja_type = 0;
 
         game.ninjas[id] = {
+            id: id,
             body: null,
             alive: true,
             ninja_type: ninja_type,
@@ -606,10 +608,10 @@ var game = {
                 }
 
                 // health pack
-                if(crate.crate_type == 0) {
+                if(crate.type == 0) {
                     this.damage = Math.max(0, this.damage - settings.crates.health_restore);
                 }
-                if(crate.crate_type == 1) {
+                if(crate.type == 1) {
                     this.jetpack.ammo += settings.crates.jet_fuel;
                 }
 
@@ -626,8 +628,8 @@ var game = {
                 var y = this.body.GetPosition().get_y();
                 var force = m_ninjas[this.ninja_type].toss.force_mult * f;
                 var crate_type = 1;
-                game.create_crate(x + (Math.cos(angle) * ((m_ninjas[this.ninja_type].body.radius * 2) + crates[crate_type].width)),
-                    y + (Math.sin(angle) * ((m_ninjas[this.ninja_type].body.radius * 2)+ crates[crate_type].height)),
+                game.create_crate(x + (Math.cos(angle) * ((m_ninjas[this.ninja_type].body.radius * 2) + m_crates[crate_type].width)),
+                    y + (Math.sin(angle) * ((m_ninjas[this.ninja_type].body.radius * 2)+ m_crates[crate_type].height)),
                     this.body.GetLinearVelocity().get_x() + (Math.cos(angle) * force),
                     this.body.GetLinearVelocity().get_y() + (Math.sin(angle) * force),
                     crate_type
@@ -783,11 +785,16 @@ var game = {
         }
 
         game.asteroids[id] = {
-            body: body,
-            verts: verts,
+            id:     id,
+            body:   body,
+            verts:  verts,
             height: height,
-            width: width,
-            alive: true,
+            width:  width,
+            alive:  true,
+            size:   size,
+            edges:  edges,
+            xtoy:   xtoy,
+            ytox:   ytox,
         };
 
         return id;
@@ -824,8 +831,9 @@ var game = {
         var that = this;
 
         game.crates[id] = {
+            id: id,
             body: body,
-            crate_type: crate_type,
+            type: crate_type,
             alive: true,
 
             update: function() {
@@ -916,7 +924,7 @@ var game = {
 
         for(var i=0; i<this.ninja_ais.length; ++i) {
             this.ninja_ais[i].update();
-            console.log(i + " :: x: " + this.ninja_ais[i].n.body.GetPosition().get_x() + " y: " + this.ninja_ais[i].n.body.GetPosition().get_y());
+            //console.log(i + " :: x: " + this.ninja_ais[i].n.body.GetPosition().get_x() + " y: " + this.ninja_ais[i].n.body.GetPosition().get_y());
         }
     },
     victory: function(){
@@ -934,8 +942,4 @@ var game = {
     },
 };
 
-game.init();
-setInterval(function() {
-    game.step();
-}, 1000.0 / 60);
-
+module.exports = game;
