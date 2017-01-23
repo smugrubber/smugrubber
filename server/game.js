@@ -493,6 +493,7 @@ var game = {
 
             update: function() {
                 if(this.input.mouse_down[0] ) {
+                    console.log(this.input.mouse_angle);
                     this.shoot(this.input.mouse_angle);
                 }
 

@@ -133,6 +133,7 @@ var server = {
         switch(data.type) {
             case 'hello':   handle_hello(ws, data);   break;
             case 'control': handle_control(ws, data); break;
+            case 'ping':    handle_ping(ws, data);    break;
             default:
                 server.send_data(ws, {'type': 'err', 'msg': 'type_not_found'});
                 break;
@@ -154,6 +155,7 @@ var server = {
 
     step: function()
     {
+        // ninjas updates sent every iteration
         var ninja_data = [];
         for(var i in game.ninjas) {
             ninja_data.push({
@@ -165,10 +167,25 @@ var server = {
             });
         }
 
+        // crate updates sent every 30 iterations
+        var crate_data = [];
+        if(game.iteration % 30 == 0) {
+            for(var i in game.crates) {
+                crate_data.push({
+                    'id': game.crates[i].id,
+                    'x':  game.crates[i].body.GetPosition().get_x(),
+                    'y':  game.crates[i].body.GetPosition().get_y(),
+                    'px': game.crates[i].body.GetLinearVelocity().get_x(),
+                    'py': game.crates[i].body.GetLinearVelocity().get_y(),
+                });
+            }
+        }
+
         server.broadcast({
             "type":      "step",
             "iteration": game.iteration,
-            "ninjas":    ninja_data
+            "ninjas":    ninja_data,
+            "crates":    crate_data,
         });
     }
 };
@@ -285,6 +302,15 @@ function handle_control(ws, data)
         game.ninjas[ninja_id].input.key_result       = data.key_result;
         game.ninjas[ninja_id].input.mouse_angle      = data.mouse_angle;
     }
+}
+
+function handle_ping(ws, data)
+{
+    if(config.verbose) {
+        console.log("handle_ping");
+    }
+
+    server.send_data(ws, {"type": "pong"});
 }
 
 

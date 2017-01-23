@@ -90,7 +90,7 @@ var game = {
     mouseDown: [0, 0, 0, 0, 0, 0, 0, 0, 0],
     ninja: null,
     camninja: null,
-    mouseangle: 0.0,
+    mouse_angle: 0.0,
     mousex: 0,
     mousey: 0,
     KEY_UP   : 1,
@@ -1067,7 +1067,7 @@ var game = {
                 });
 
                 this.n.facing_dir = (game.mousex < window.innerWidth / 2) ? 1 : -1;
-                this.angle = Math.atan2((gameCvs.height / 2) - game.mousey, game.mousex - gameCvs.width / 2);
+                this.angle = game.mouse_angle;
                 this.n.gun_angle = this.angle;
 
                 this.n.menuUp(0);
@@ -1571,7 +1571,7 @@ var game = {
         var y = event.pageY;
         game.mousex = x;
         game.mousey = y;
-        game.mouseangle = Math.atan2((gameCvs.height / 2) - y, x - (gameCvs.width / 2));
+        game.mouse_angle = Math.atan2((gameCvs.height / 2) - y, x - (gameCvs.width / 2));
     },
 
     keydown: function(e) {

@@ -3,6 +3,8 @@ var client = {
     data_channel: null,
     socket: null,
     verbose: true,
+    ping: 0,
+    ping_sent: 0,
 
     log_error: function(e) {
         console.log(e);
@@ -101,6 +103,11 @@ var client = {
         client.data_channel.send(JSON.stringify(data));
     },
 
+    check_ping: function() {
+        client.ping_sent = (new Date()).getTime();
+        client.send({"type": "ping"});
+    },
+
     parse_client_message: function(msg) {
         if(client.verbose) {
             console.log('parse_client_message');
@@ -122,6 +129,7 @@ var client = {
         switch(data.type) {
             case 'hello': handle_hello(data); break;
             case 'step':  handle_step(data);  break;
+            case 'pong':  handle_pong(data);  break;
             default:
                 console.log('err :: type_not_found');
                 break;
@@ -189,4 +197,27 @@ function handle_step(data)
         console.log("moved a ninja");
     }
 
+    for(var i=0; i<data.crates.length; ++i) {
+        game.crates[data.crates[i].id].body.SetTransform(new Box2D.b2Vec2(data.crates[i].x, data.crates[i].y), 0);
+        game.crates[data.crates[i].id].body.SetLinearVelocity(new Box2D.b2Vec2(data.crates[i].px, data.crates[i].py));
+        console.log("moved a ninja");
+    }
+
 }
+
+function handle_pong(data)
+{
+    if(client.verbose) {
+        console.log('handle_pong');
+    }
+
+    var now = (new Date()).getTime();
+    var ms = now - client.ping_sent;
+    client.ping = ms;
+
+    console.log(ms);
+}
+
+setInterval(function() {
+    client.check_ping();
+}, 1000.0);
