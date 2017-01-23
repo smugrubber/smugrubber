@@ -11,7 +11,7 @@
         <canvas id="textOverlay" width="800" height="200"></canvas>
         <div id="overlay">
             <div id="main_menu">
-                <h1>smugrubber</h1>
+                <h1>SMUGRUBBER</h1>
                 <h2>fertilize space with alien remains</h2>
             </div>
             <div id="gun_menu">
@@ -76,6 +76,7 @@
         <script src="/js/libs/jquery-1.12.1.min.js "></script>
         <script src="/js/libs/glMatrix-0.9.5.min.js"></script>
         <script src="/js/libs/webrtc-adapter-latest.js"></script>
+        <script src="/js/libs/howler.min.js"></script>
 
         <script src="/js/game/objects/guns.js"></script>
         <script src="/js/game/objects/crates.js"></script>
@@ -89,15 +90,16 @@
         $(document).ready(function() {
             center_screen();
         });
-        $(".changeWeapon").click(function(){
-            changeWeapon();
+        var reload = new Howl({
+          src: ["/audioAssets/sfx/reload.mp3"]
+        });
+        var shot = new Howl({
+          src: ["/audioAssets/sfx/shot.mp3"],
         });
         for(var countGuns = 0; countGuns < m_guns.length; countGuns++){
-            $("#gun_list").append("<li><a href='#'>" + countGuns + "</a></li>");
-            // $("#overlay").append("<a href='")
-            // m_guns.
+            $("#gun_list").append("<li><a onclick='changeWeapon(" + countGuns + ")' href='#'>" + m_guns[countGuns].name + "</a></li>");
+
         }
-        
         </script>
     </body>
 </html>

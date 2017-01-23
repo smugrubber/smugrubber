@@ -85,7 +85,7 @@ var m_guns = [
     },
     {
         name: "machine gun",
-        src: "machine.png",
+        src: "gunner.png",
         strength:     40.0,
         radius:       0.15,
         density:      1.0,
